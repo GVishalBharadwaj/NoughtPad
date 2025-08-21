@@ -35,6 +35,8 @@ public class ShareActivity extends AppCompatActivity {
     private ActivityShareBinding binding;
     private GenerativeModelFutures generativeModel;
     private AppDatabase database;
+
+    public static final String EXTRA_IMAGE_URI = "com.example.smartc.EXTRA_IMAGE_URI";
     private final Executor backgroundExecutor = Executors.newSingleThreadExecutor();
 
     @Override
@@ -114,12 +116,16 @@ public class ShareActivity extends AppCompatActivity {
                 Bitmap originalBitmap = uriToBitmap(uri);
                 Bitmap bitmap = scaleBitmap(originalBitmap);
 
-                String prompt = "Analyze this image. Your primary goal is to determine if it's a reminder (bill, receipt, task with a date) or a simple note. " +
-                        "Respond ONLY with a valid JSON object. " +
-                        "The JSON must have a 'type' ('REMINDER' or 'NOTE') and a 'title' (a concise, user-friendly summary). " +
-                        "If 'type' is 'REMINDER', you MUST also include 'amount' and 'due_date' (YYYY-MM-DD). If amount is not found, use 'N/A'. " +
-                        "For a bill, the title should be the payee (e.g., 'Verizon Bill'). " +
-                        "For a note, the title should be a summary of the image's content (e.g., 'Shopping List').";
+                String prompt = "Your sole task is to analyze the content (image or text) and respond ONLY with a single, valid JSON object on one line, without any extra text or markdown formatting. " +
+                        "The JSON object must contain the following keys: 'type', 'title', 'due_date', and 'amount'. " +
+                        "Follow these rules precisely: " +
+                        "1. If the content contains a clear due date, set 'type' to 'REMINDER'. " +
+                        "2. If no clear due date is found, set 'type' to 'NOTE'. " +
+                        "3. For the 'title', create a short, user-friendly summary (e.g., 'Pay Electricity Bill', 'Grocery List'). " +
+                        "4. For 'REMINDER' types, 'due_date' MUST be in YYYY-MM-DD format. For 'NOTE' types, it MUST be 'N/A'. " +
+                        "5. For 'REMINDER' types, extract the 'amount' if available. If not found, it MUST be 'N/A'. For 'NOTE' types, it MUST be 'N/A'. " +
+                        "Example for a bill: {\"type\":\"REMINDER\",\"title\":\"Pay Verizon Bill\",\"due_date\":\"2025-09-15\",\"amount\":\"$85.50\"} " +
+                        "Example for a note: {\"type\":\"NOTE\",\"title\":\"Shopping List\",\"due_date\":\"N/A\",\"amount\":\"N/A\"}";
 
                 Content content = new Content.Builder().addImage(bitmap).addText(prompt).build();
                 ListenableFuture<GenerateContentResponse> future = generativeModel.generateContent(content);
