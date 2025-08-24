@@ -56,22 +56,31 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.R
 
     @Override
     public void onBindViewHolder(@NonNull ReminderViewHolder holder, int position) {
-        // This method is unchanged
         ReminderItem currentItem = getItem(position);
-        holder.contentTextView.setText(currentItem.content);
 
-        if ("REMINDER".equals(currentItem.type) && currentItem.isActive) {
+        // ✅ Use the new 'title' field instead of 'content'
+        holder.contentTextView.setText(currentItem.title);
+
+        if ("REMINDER".equals(currentItem.category) || "BILL".equals(currentItem.category) || "TICKET".equals(currentItem.category) || "TASK".equals(currentItem.category)) {
             holder.iconImageView.setImageResource(R.drawable.ic_reminder);
-            holder.dueDateTextView.setVisibility(View.VISIBLE);
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault());
-            String formattedDate = sdf.format(new Date(currentItem.reminderTime));
-            holder.dueDateTextView.setText("Due: " + formattedDate);
+
+            // If there's a valid reminder time, show and format it
+            if (currentItem.reminderTime > 0) {
+                holder.dueDateTextView.setVisibility(View.VISIBLE);
+                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault());
+                String formattedDate = sdf.format(new Date(currentItem.reminderTime));
+                holder.dueDateTextView.setText("Due: " + formattedDate);
+            } else {
+                holder.dueDateTextView.setVisibility(View.GONE);
+            }
         } else {
+            // This is for NOTE or RECEIPT categories
             holder.iconImageView.setImageResource(R.drawable.ic_note);
-            holder.dueDateTextView.setVisibility(View.GONE);
+            // We can show a preview of the description for notes
+            holder.dueDateTextView.setVisibility(View.VISIBLE);
+            holder.dueDateTextView.setText(currentItem.description);
         }
     }
-
     class ReminderViewHolder extends RecyclerView.ViewHolder {
         // ... (variable declarations are unchanged)
         private final ImageView iconImageView;

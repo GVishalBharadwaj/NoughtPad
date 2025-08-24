@@ -14,6 +14,11 @@ public class ReminderItem {
     public String details = "";
     public String amount = "";
 
+    public String title = ""; // ✅ The field that was missing
+
+    public String description = "";
+    public String tags = ""; // Will store a comma-separated list, e.g., "bill,finance,payment due"
+    public String category = ""; // e.g., "BILL", "RECEIPT", "NOTE"
 
     public long reminderTime; // The due date in milliseconds, 0 for notes
 

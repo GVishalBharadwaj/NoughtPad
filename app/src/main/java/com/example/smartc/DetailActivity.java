@@ -1,3 +1,5 @@
+// This is the complete and final code for DetailActivity.java
+// It correctly handles padding and the save/edit/delete logic.
 package com.example.smartc;
 
 import android.app.AlertDialog;
@@ -8,7 +10,11 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.smartc.databinding.ActivityDetailBinding;
 import java.text.SimpleDateFormat;
@@ -28,15 +34,21 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         binding = ActivityDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
         reminderCalendar = Calendar.getInstance();
 
         Intent intent = getIntent();
         if (intent.hasExtra(MainActivity.EXTRA_ID)) {
-            // --- EDIT MODE ---
             isEditMode = true;
             currentItemId = intent.getIntExtra(MainActivity.EXTRA_ID, -1);
             setTitle("Edit Item");
@@ -50,15 +62,14 @@ public class DetailActivity extends AppCompatActivity {
                 }
             });
         } else {
-            // --- CREATE MODE ---
             isEditMode = false;
             setTitle("Create New Item");
             binding.buttonDelete.setVisibility(View.GONE);
         }
 
-        binding.buttonSetReminder.setOnClickListener(v -> showDatePickerDialog());
-        binding.buttonSave.setOnClickListener(v -> saveItem());
+        binding.buttonAddReminder.setOnClickListener(v -> showDatePickerDialog());
         binding.buttonDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
+        binding.buttonSave.setOnClickListener(v -> saveItem());
     }
 
     private void showDeleteConfirmationDialog() {
@@ -72,7 +83,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private void deleteItem() {
         if (currentItem != null) {
-            if (currentItem.isActive && currentItem.type.equals("REMINDER")) {
+            if (currentItem.isActive && "REMINDER".equals(currentItem.type)) {
                 ReminderManager.cancelReminder(this, currentItem);
             }
             reminderViewModel.delete(currentItem);
@@ -82,12 +93,9 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void populateUI(ReminderItem item) {
-        binding.editTextContent.setText(item.content);
-
-        // Set the new TextView with the item's type
-        binding.textViewItemType.setText("Type: " + item.type);
-
-        if (item.type.equals("REMINDER")) {
+        binding.editTextTitle.setText(item.title);
+        binding.editTextDescription.setText(item.description);
+        if ("REMINDER".equals(item.type) || item.reminderTime > 0) {
             isReminderSet = true;
             reminderCalendar.setTimeInMillis(item.reminderTime);
             updateReminderDateTextView();
@@ -95,41 +103,37 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void saveItem() {
-        String content = binding.editTextContent.getText().toString().trim();
+        String title = binding.editTextTitle.getText().toString().trim();
+        String description = binding.editTextDescription.getText().toString().trim();
 
-        if (TextUtils.isEmpty(content)) {
-            Toast.makeText(this, "Please enter some content", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(title)) {
+            Toast.makeText(this, "Please enter a title", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        ReminderItem itemToSave = isEditMode ? currentItem : new ReminderItem();
-        itemToSave.content = content;
+        final ReminderItem itemToSave;
+        if (isEditMode) itemToSave = currentItem;
+        else itemToSave = new ReminderItem();
 
-        // --- Start of Corrected Logic ---
+        itemToSave.title = title;
+        itemToSave.description = description;
 
-        // ALWAYS cancel the previous alarm when editing an active reminder.
-        // This prevents the duplicate notification bug.
-        if (isEditMode && currentItem.isActive && currentItem.type.equals("REMINDER")) {
-            ReminderManager.cancelReminder(this, currentItem);
+        if (isEditMode && itemToSave.isActive) {
+            ReminderManager.cancelReminder(this, itemToSave);
         }
 
         if (isReminderSet) {
-            itemToSave.type = "REMINDER";
+            itemToSave.type = "REMINDER"; // We can enhance this later
             itemToSave.reminderTime = reminderCalendar.getTimeInMillis();
             itemToSave.isActive = true;
-            // Now, set the new (or rescheduled) alarm.
-            ReminderManager.setReminder(this, itemToSave.reminderTime, "Reminder", itemToSave.content);
+            ReminderManager.setReminder(this, itemToSave.reminderTime, itemToSave.title, itemToSave.description);
         } else {
-            // If the date was removed or never set, it's a note.
-            itemToSave.type = "NOTE";
+            itemToSave.type = "NOTE"; // We can enhance this later
             itemToSave.reminderTime = 0;
             itemToSave.isActive = false;
         }
 
-        // --- End of Corrected Logic ---
-
-
-        if(isEditMode) {
+        if (isEditMode) {
             reminderViewModel.update(itemToSave);
             Toast.makeText(this, "Item updated!", Toast.LENGTH_SHORT).show();
         } else {

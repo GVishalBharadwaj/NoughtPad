@@ -44,4 +44,14 @@ public class ReminderViewModel extends AndroidViewModel {
     public void update(ReminderItem item) {
         executor.execute(() -> reminderDao.update(item));
     }
+
+    // Add this method to ReminderViewModel.java
+    public LiveData<List<ReminderItem>> getItemsByCategory(String category) {
+        return reminderDao.getItemsByCategory(category);
+    }
+
+    // ✅ ADD THIS METHOD
+    public LiveData<List<ReminderItem>> getItemsByCategories(String[] categories) {
+        return reminderDao.getItemsByCategories(categories);
+    }
 }

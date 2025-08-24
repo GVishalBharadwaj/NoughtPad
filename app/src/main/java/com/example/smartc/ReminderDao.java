@@ -35,4 +35,13 @@ public interface ReminderDao {
     // Add this to ReminderDao.java
     @Query("SELECT * FROM reminder_items WHERE id = :itemId")
     LiveData<ReminderItem> getById(int itemId);
+
+    // Add this method to ReminderDao.java
+
+    @Query("SELECT * FROM reminder_items WHERE category = :category ORDER BY id DESC")
+    LiveData<List<ReminderItem>> getItemsByCategory(String category);
+
+    // ✅ ADD THIS METHOD for the combined Reminders tab
+    @Query("SELECT * FROM reminder_items WHERE category IN (:categories) ORDER BY reminderTime ASC")
+    LiveData<List<ReminderItem>> getItemsByCategories(String[] categories);
 }
