@@ -15,7 +15,6 @@ import java.util.Locale;
 
 public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.ReminderViewHolder> {
 
-    // ✅ START: New code for handling clicks
     private OnItemClickListener listener;
 
     public interface OnItemClickListener {
@@ -25,26 +24,10 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.R
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
-    // ✅ END: New code for handling clicks
 
     public ReminderAdapter() {
         super(DIFF_CALLBACK);
     }
-
-    // ... (DIFF_CALLBACK is unchanged)
-    private static final DiffUtil.ItemCallback<ReminderItem> DIFF_CALLBACK = new DiffUtil.ItemCallback<ReminderItem>() {
-        @Override
-        public boolean areItemsTheSame(@NonNull ReminderItem oldItem, @NonNull ReminderItem newItem) {
-            return oldItem.id == newItem.id;
-        }
-
-        @Override
-        public boolean areContentsTheSame(@NonNull ReminderItem oldItem, @NonNull ReminderItem newItem) {
-            return oldItem.content.equals(newItem.content) &&
-                    oldItem.reminderTime == newItem.reminderTime &&
-                    oldItem.isActive == newItem.isActive;
-        }
-    };
 
     @NonNull
     @Override
@@ -57,50 +40,56 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.R
     @Override
     public void onBindViewHolder(@NonNull ReminderViewHolder holder, int position) {
         ReminderItem currentItem = getItem(position);
+        holder.titleTextView.setText(currentItem.title);
+        holder.descriptionTextView.setText(currentItem.description);
 
-        // ✅ Use the new 'title' field instead of 'content'
-        holder.contentTextView.setText(currentItem.title);
-
-        if ("REMINDER".equals(currentItem.category) || "BILL".equals(currentItem.category) || "TICKET".equals(currentItem.category) || "TASK".equals(currentItem.category)) {
+        if (currentItem.isActive && currentItem.reminderTime > 0) {
             holder.iconImageView.setImageResource(R.drawable.ic_reminder);
-
-            // If there's a valid reminder time, show and format it
-            if (currentItem.reminderTime > 0) {
-                holder.dueDateTextView.setVisibility(View.VISIBLE);
-                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault());
-                String formattedDate = sdf.format(new Date(currentItem.reminderTime));
-                holder.dueDateTextView.setText("Due: " + formattedDate);
-            } else {
-                holder.dueDateTextView.setVisibility(View.GONE);
-            }
-        } else {
-            // This is for NOTE or RECEIPT categories
-            holder.iconImageView.setImageResource(R.drawable.ic_note);
-            // We can show a preview of the description for notes
             holder.dueDateTextView.setVisibility(View.VISIBLE);
-            holder.dueDateTextView.setText(currentItem.description);
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault());
+            String formattedDate = sdf.format(new Date(currentItem.reminderTime));
+            holder.dueDateTextView.setText("Due: " + formattedDate);
+        } else {
+            holder.iconImageView.setImageResource(R.drawable.ic_note);
+            holder.dueDateTextView.setVisibility(View.GONE);
         }
     }
+
     class ReminderViewHolder extends RecyclerView.ViewHolder {
-        // ... (variable declarations are unchanged)
         private final ImageView iconImageView;
-        private final TextView contentTextView;
+        private final TextView titleTextView;
+        private final TextView descriptionTextView;
         private final TextView dueDateTextView;
 
         public ReminderViewHolder(@NonNull View itemView) {
             super(itemView);
             iconImageView = itemView.findViewById(R.id.item_icon);
-            contentTextView = itemView.findViewById(R.id.item_content);
+            // ✅ This now correctly references the new IDs
+            titleTextView = itemView.findViewById(R.id.item_title);
+            descriptionTextView = itemView.findViewById(R.id.item_description);
             dueDateTextView = itemView.findViewById(R.id.item_due_date);
 
-            // ✅ START: New code to make the item clickable
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
                 if (listener != null && position != RecyclerView.NO_POSITION) {
                     listener.onItemClick(getItem(position));
                 }
             });
-            // ✅ END: New code to make the item clickable
         }
     }
+
+    private static final DiffUtil.ItemCallback<ReminderItem> DIFF_CALLBACK = new DiffUtil.ItemCallback<ReminderItem>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull ReminderItem oldItem, @NonNull ReminderItem newItem) {
+            return oldItem.id == newItem.id;
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull ReminderItem oldItem, @NonNull ReminderItem newItem) {
+            return oldItem.title.equals(newItem.title) &&
+                    oldItem.description.equals(newItem.description) &&
+                    oldItem.reminderTime == newItem.reminderTime &&
+                    oldItem.isActive == newItem.isActive;
+        }
+    };
 }

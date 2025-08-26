@@ -1,5 +1,3 @@
-// This is the complete and final code for ItemListFragment.java
-// It correctly uses the shared ViewModel and handles item clicks. Padding logic is removed.
 package com.example.smartc;
 
 import android.content.Intent;
@@ -55,8 +53,7 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
         adapter.setOnItemClickListener(this);
         recyclerView.setAdapter(adapter);
 
-        // This is the CRITICAL line for fixing the bug.
-        // It gets the ViewModel from the PARENT ACTIVITY (MainActivity), ensuring it's shared.
+        // This is the CRITICAL line. It gets the ViewModel from the PARENT ACTIVITY (MainActivity).
         reminderViewModel = new ViewModelProvider(requireActivity()).get(ReminderViewModel.class);
 
         reminderViewModel.getAllItems().observe(getViewLifecycleOwner(), allItems -> {

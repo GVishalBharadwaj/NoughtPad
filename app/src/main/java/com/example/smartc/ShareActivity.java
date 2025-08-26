@@ -89,12 +89,21 @@ public class ShareActivity extends AppCompatActivity {
     }
 
     private void analyzeText(String text) {
-        String textPrompt = "Your SOLE TASK is to analyze the following text and respond with a single, valid JSON object and NOTHING ELSE. Your entire response must be ONLY the JSON object. Do not include any explanatory text, greetings, or markdown formatting like ```json. The current date is August 24, 2025. " +
+        // Get the current date to provide context to the AI
+        String currentDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.US).format(new Date());
+
+        // The master prompt for text, now as a template with a placeholder (%s) for the date
+        String textPromptTemplate = "Your SOLE TASK is to analyze the following text and respond with a single, valid JSON object and NOTHING ELSE. Your entire response must be ONLY the JSON object. Do not include any explanatory text, greetings, or markdown formatting like ```json. The current date is %s. " +
                 "First, determine the primary category from this list: [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. A \"TASK\" is a direct command or personal reminder. " +
                 "Second, create a JSON object with the following keys: \"category\", \"title\", \"description\", \"tags\", \"amount\", and a nested \"reminder\" object. " +
                 "\"description\" is the most important field; use the full text or a detailed summary. " +
-                "\"reminder\" is an object containing \"is_reminder\" (boolean, true for BILL/TICKET/TASK), \"date\" (YYYY-MM-DD, calculated from text like 'tomorrow' which is '2025-08-25'), and \"time\" (HH:mm, default to \"00:00\" if not found). If is_reminder is false, date and time MUST be \"N/A\". " +
-                "Example for a Task: Text input: \"remind me to wish vishal happy birthday on august 28th\". Response: {\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"remind me to wish vishal happy birthday on august 28th\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"00:00\"}}";        Content content = new Content.Builder().addText(textPrompt + "\n\nHere is the text to analyze:\n" + text).build();
+                "\"reminder\" is an object containing \"is_reminder\" (boolean, true for BILL/TICKET/TASK), \"date\" (YYYY-MM-DD, calculated from text like 'tomorrow'), and \"time\" (HH:mm, default to \"00:00\" if not found). If is_reminder is false, date and time MUST be \"N/A\". " +
+                "Example for a Task: Text input: \"remind me to wish vishal happy birthday on august 28th\". Response: {\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"remind me to wish vishal happy birthday on august 28th\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"00:00\"}}";
+
+        // Inject the current date into the prompt
+        String finalPrompt = String.format(textPromptTemplate, currentDate);
+
+        Content content = new Content.Builder().addText(finalPrompt + "\n\nHere is the text to analyze:\n" + text).build();
         ListenableFuture<GenerateContentResponse> future = generativeModel.generateContent(content);
 
         Futures.addCallback(future, new FutureCallback<GenerateContentResponse>() {
@@ -109,24 +118,32 @@ public class ShareActivity extends AppCompatActivity {
             }
         }, backgroundExecutor);
     }
-
     private void analyzeImage(Uri uri) {
         backgroundExecutor.execute(() -> {
             try {
                 Bitmap originalBitmap = uriToBitmap(uri);
                 Bitmap bitmap = scaleBitmap(originalBitmap);
 
-                String imagePrompt = "Your SOLE TASK is to analyze the image and respond with a single, valid JSON object and NOTHING ELSE. Your entire response must be ONLY the JSON object. Do not include any explanatory text, greetings, or markdown formatting like ```json. " +
+                // Get the current date to provide context to the AI
+                String currentDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.US).format(new Date());
+
+                // The master prompt for images, now as a template with a placeholder (%s) for the date
+                String imagePromptTemplate = "Your SOLE TASK is to analyze the image and respond with a single, valid JSON object and NOTHING ELSE. Your entire response must be ONLY the JSON object. Do not include any explanatory text, greetings, or markdown formatting like ```json. The current date is %s. " +
                         "Analyze the image to determine its \"category\" from [\"BILL\", \"RECEIPT\", \"TICKET\", \"NOTE\"]. " +
                         "- A \"BILL\" is a request for future payment. " +
-                        "- A \"RECEIPT\" is a proof of past payment. " +
+                        "- A \"RECEIPT\" is a proof of a past payment. " +
                         "- A \"TICKET\" is for an event or travel. " +
                         "- A \"NOTE\" is for everything else. " +
                         "Populate a JSON object with these keys: \"category\", \"title\", \"description\", \"tags\", \"amount\", and a nested \"reminder\" object. " +
                         "\"description\" is the most important field; provide a detailed summary of all information in the image. " +
                         "\"reminder\" is an object containing \"is_reminder\" (boolean), \"date\" (YYYY-MM-DD or \"N/A\"), and \"time\" (HH:mm or \"N/A\", default to \"00:00\" if a date exists but no time). " +
                         "Example for a bill: " +
-                        "{\"category\":\"BILL\",\"title\":\"Pay Electricity Bill\",\"description\":\"Bill for account 12345 from Telangana Power.\",\"tags\":[\"bill\",\"utility\",\"finance\"],\"amount\":\"₹1570.00\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-09-10\",\"time\":\"00:00\"}}";                Content content = new Content.Builder().addImage(bitmap).addText(imagePrompt).build();
+                        "{\"category\":\"BILL\",\"title\":\"Pay Electricity Bill\",\"description\":\"Bill for account 12345 from Telangana Power.\",\"tags\":[\"bill\",\"utility\",\"finance\"],\"amount\":\"₹1570.00\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-09-10\",\"time\":\"00:00\"}}";
+
+                // Inject the current date into the prompt
+                String finalPrompt = String.format(imagePromptTemplate, currentDate);
+
+                Content content = new Content.Builder().addImage(bitmap).addText(finalPrompt).build();
                 ListenableFuture<GenerateContentResponse> future = generativeModel.generateContent(content);
 
                 Futures.addCallback(future, new FutureCallback<GenerateContentResponse>() {
@@ -136,7 +153,7 @@ public class ShareActivity extends AppCompatActivity {
                     }
                     @Override
                     public void onFailure(Throwable t) {
-                        Log.e("ShareActivity", "API call failed", t);
+                        Log.e("ShareActivity", "API call failed for IMAGE", t);
                         runOnUiThread(() -> showError("API call failed: " + t.getMessage()));
                     }
                 }, backgroundExecutor);
@@ -146,7 +163,6 @@ public class ShareActivity extends AppCompatActivity {
             }
         });
     }
-
     private void processApiResponse(String responseText) {
         Log.d("GEMINI_RESPONSE", "Full API Response: " + responseText);
         if (responseText == null || !responseText.contains("{") || !responseText.contains("}")) {

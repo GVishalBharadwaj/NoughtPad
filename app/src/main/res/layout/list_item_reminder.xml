@@ -21,32 +21,49 @@
             android:layout_height="24dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_launcher_foreground"
-            tools:srcCompat="@android:drawable/ic_menu_edit" />
+            tools:srcCompat="@drawable/ic_reminder"
+            android:contentDescription="Item type icon" />
 
         <TextView
-            android:id="@+id/item_content"
+            android:id="@+id/item_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/item_icon"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Pay Electricity Bill" />
 
         <TextView
-            android:id="@+id/item_due_date"
+            android:id="@+id/item_description"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="?android:attr/textColorSecondary"
             android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="@id/item_title"
+            app:layout_constraintStart_toStartOf="@id/item_title"
+            app:layout_constraintTop_toBottomOf="@id/item_title"
+            tools:text="Bill for account 12345 from Telangana Power." />
+
+        <TextView
+            android:id="@+id/item_due_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="14sp"
+            android:textStyle="italic"
             android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="@id/item_content"
-            app:layout_constraintStart_toStartOf="@id/item_content"
-            app:layout_constraintTop_toBottomOf="@id/item_content"
+            app:layout_constraintEnd_toEndOf="@id/item_description"
+            app:layout_constraintStart_toStartOf="@id/item_description"
+            app:layout_constraintTop_toBottomOf="@id/item_description"
             tools:text="Due: Aug 25, 2025 at 9:00 AM"
             tools:visibility="visible"/>
 

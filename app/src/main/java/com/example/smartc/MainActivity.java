@@ -1,5 +1,3 @@
-// This is the complete and final code for MainActivity.java
-// It correctly sets up the tabs and handles the UI padding.
 package com.example.smartc;
 
 import android.Manifest;
@@ -9,7 +7,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
-
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
@@ -20,10 +17,9 @@ import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-
+import androidx.lifecycle.ViewModelProvider;
 import com.example.smartc.databinding.ActivityMainBinding;
 import com.google.android.material.tabs.TabLayoutMediator;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -32,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String EXTRA_ID = "com.example.smartc.EXTRA_ID";
     private ActivityMainBinding binding;
     private ViewPagerAdapter viewPagerAdapter;
+    private ReminderViewModel reminderViewModel; // ViewModel owned by the Activity
     private boolean isAllFabsVisible;
     private ActivityResultLauncher<PickVisualMediaRequest> galleryLauncher;
     private ActivityResultLauncher<Uri> cameraLauncher;
@@ -46,10 +43,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
 
+        // Initialize the ViewModel here. It will be shared with the fragments.
+        reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             float density = getResources().getDisplayMetrics().density;
-            int paddingReduction = (int) (16 * density);
+            int paddingReduction = (int) (8 * density);
             binding.appBarLayout.setPadding(systemBars.left, systemBars.top - paddingReduction, systemBars.right, 0);
             binding.viewPager.setPadding(0, 0, 0, systemBars.bottom);
             return insets;

@@ -22,7 +22,9 @@
             android:id="@+id/tab_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:contentDescription="Content categories" />
+            android:contentDescription="Content categories"
+            android:layout_marginTop="-10dp" />
+
 
 
     </com.google.android.material.appbar.AppBarLayout>
