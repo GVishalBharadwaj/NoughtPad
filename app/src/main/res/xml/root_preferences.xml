@@ -1,0 +1,8 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory app:title="Sharing">
+        <SwitchPreferenceCompat
+            app:key="custom_title_toggle"
+            app:title="Set Custom Title"
+            app:summary="Show a dialog to set a custom title for shared items before processing." />
+    </PreferenceCategory>
+</PreferenceScreen>

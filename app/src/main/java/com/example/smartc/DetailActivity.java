@@ -138,9 +138,9 @@ public class DetailActivity extends AppCompatActivity {
                 "First, determine the primary category from this list: [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. " +
                 "A \"BILL\" is a request for future payment. A \"RECEIPT\" is proof of a past payment. A \"TICKET\" is for an event. A \"TASK\" is a direct command. A \"NOTE\" is everything else. " +
                 "Second, create a JSON object with these keys: \"category\", \"title\", \"description\", \"tags\", \"amount\", and a nested \"reminder\" object. " +
-                "\"description\" is the most important field; provide a the paraphrased text if the Primary Category is a NOTE,else provide a detailed summary of all information . " +
+                "\"description\" is the most important field; if the category is 'NOTE', paraphrase the original text to improve clarity and style. For all other categories, provide a detailed summary of all information. " +
                 "\"reminder\" is an object containing \"is_reminder\" (boolean), \"date\" (YYYY-MM-DD or \"N/A\"), and \"time\" (HH:mm, default to \"09:00\" if not found). " +
-                "Example for a task: {\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"remind me to wish arha happy birthday on august 28th\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"09:00\"}}";
+                "Example for a task: {\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"remind me to wish vishal happy birthday on august 28th\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"09:00\"}}";
         String finalPrompt = String.format(textPromptTemplate, currentDate);
 
         Content content = new Content.Builder().addText(finalPrompt + "\n\nHere is the text to analyze:\n" + combinedText).build();
