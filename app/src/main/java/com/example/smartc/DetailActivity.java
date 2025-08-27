@@ -45,6 +45,8 @@ public class DetailActivity extends AppCompatActivity {
     private boolean isEditMode = false;
     private GenerativeModelFutures generativeModel;
     private final Executor backgroundExecutor = Executors.newSingleThreadExecutor();
+    private long lastApiCallTime = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +121,10 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void analyzeTextWithAi() {
+        if (System.currentTimeMillis() - lastApiCallTime < 10000) { // 10000 milliseconds = 10 seconds
+            Toast.makeText(this, "Please wait a moment before analyzing again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String title = binding.editTextTitle.getText().toString().trim();
         String description = binding.editTextDescription.getText().toString().trim();
         String combinedText = title + "\n" + description;
