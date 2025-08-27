@@ -49,8 +49,7 @@ public class ShareActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         // Use the secure BuildConfig method to get the API key
-        String myApiKey = "AIzaSyA5gi1DNkS1ZddURma6maMoMRsLiK4-WQ0";
-        GenerativeModel gm = new GenerativeModel("gemini-2.5-flash", myApiKey);
+        GenerativeModel gm = new GenerativeModel("gemini-2.0-flash-lite", BuildConfig.GEMINI_API_KEY);
 
         generativeModel = GenerativeModelFutures.from(gm);
 

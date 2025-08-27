@@ -62,9 +62,7 @@ public class DetailActivity extends AppCompatActivity {
         reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
         reminderCalendar = Calendar.getInstance();
 
-        // Using your hardcoded key for now.
-        String myApiKey = "AIzaSyA5gi1DNkS1ZddURma6maMoMRsLiK4-WQ0";
-        GenerativeModel gm = new GenerativeModel("gemini-2.5-flash", myApiKey);
+        GenerativeModel gm = new GenerativeModel("gemini-2.0-flash-lite", BuildConfig.GEMINI_API_KEY);
         generativeModel = GenerativeModelFutures.from(gm);
 
         Intent intent = getIntent();
@@ -140,9 +138,9 @@ public class DetailActivity extends AppCompatActivity {
                 "First, determine the primary category from this list: [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. " +
                 "A \"BILL\" is a request for future payment. A \"RECEIPT\" is proof of a past payment. A \"TICKET\" is for an event. A \"TASK\" is a direct command. A \"NOTE\" is everything else. " +
                 "Second, create a JSON object with these keys: \"category\", \"title\", \"description\", \"tags\", \"amount\", and a nested \"reminder\" object. " +
-                "\"description\" is the most important field; provide a detailed summary of all information. " +
+                "\"description\" is the most important field; provide a the paraphrased text if the Primary Category is a NOTE,else provide a detailed summary of all information . " +
                 "\"reminder\" is an object containing \"is_reminder\" (boolean), \"date\" (YYYY-MM-DD or \"N/A\"), and \"time\" (HH:mm, default to \"09:00\" if not found). " +
-                "Example for a task: {\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"remind me to wish vishal happy birthday on august 28th\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"09:00\"}}";
+                "Example for a task: {\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"remind me to wish arha happy birthday on august 28th\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"09:00\"}}";
         String finalPrompt = String.format(textPromptTemplate, currentDate);
 
         Content content = new Content.Builder().addText(finalPrompt + "\n\nHere is the text to analyze:\n" + combinedText).build();

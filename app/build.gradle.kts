@@ -1,4 +1,13 @@
-// File: app/build.gradle.kts
+import java.util.Properties
+import java.io.FileInputStream
+
+// Logic to read the API key from local.properties
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+val apiKey = localProperties.getProperty("GEMINI_API_KEY", "")
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,21 +17,18 @@ plugins {
 
 android {
     namespace = "com.example.smartc"
-
-    // ✅ Change this from 34 to 35
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.smartc"
         minSdk = 26
-
-        // ✅ It's best to also update this to 35
         targetSdk = 35
-
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY")}\"")
+
+        // Use the apiKey variable defined at the top of this file
+        buildConfigField("String", "GEMINI_API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -38,30 +44,27 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(17))
         }
     }
-    // ✅ ADD THIS BLOCK TO ALIGN THE KOTLIN COMPILER'S TARGET
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
-
     buildFeatures {
         viewBinding = true
         buildConfig = true
     }
-
 }
 
 dependencies {
-    // ... your dependencies are unchanged
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-
     implementation(libs.gemini.ai)
     implementation(libs.guava)
     implementation(libs.room.runtime)
@@ -73,4 +76,3 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
-
