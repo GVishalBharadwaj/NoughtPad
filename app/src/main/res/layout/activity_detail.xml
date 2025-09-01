@@ -39,6 +39,37 @@
             android:background="@android:color/transparent"
             android:autofillHints="none" />
 
+        <LinearLayout
+            android:id="@+id/reminder_details_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_reminder"
+                android:contentDescription="Reminder Icon" />
+
+            <TextView
+                android:id="@+id/text_view_selected_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                tools:text="Sep 01, 2025 at 11:14 PM"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/button_add_reminder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Add / Edit Reminder" />
+
         <com.google.android.material.chip.ChipGroup
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -64,35 +95,46 @@
         </com.google.android.material.chip.ChipGroup>
 
         <LinearLayout
-            android:id="@+id/reminder_details_layout"
+            android:id="@+id/expense_date_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
             android:visibility="gone"
             tools:visibility="visible">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:srcCompat="@drawable/ic_reminder"
-                android:contentDescription="Reminder Icon" />
-
             <TextView
-                android:id="@+id/text_view_selected_date"
+                android:id="@+id/date_selection_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                tools:text="Aug 21, 2025 at 10:00 PM"/>
-        </LinearLayout>
+                android:text="Set Expense Date"
+                android:textAppearance="?attr/textAppearanceLabelLarge"/>
 
-        <Button
-            android:id="@+id/button_add_reminder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Add / Edit Reminder" />
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/expense_date_chip_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleSelection="true">
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_today"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Today"/>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_yesterday"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Yesterday"/>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_custom_expense_date"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Custom..."/>
+            </com.google.android.material.chip.ChipGroup>
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

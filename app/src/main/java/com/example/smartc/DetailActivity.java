@@ -94,14 +94,61 @@ public class DetailActivity extends AppCompatActivity {
             binding.chipRemoveReminder.setVisibility(View.GONE);
         }
 
-        binding.buttonAddReminder.setOnClickListener(v -> showDatePickerDialog());
+        binding.buttonSave.setOnClickListener(v -> saveItemManually()); // For Notes and Reminders
         binding.buttonDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
-        binding.buttonSave.setOnClickListener(v -> saveItemManually());
         binding.buttonSmartAnalyze.setOnClickListener(v -> analyzeTextWithAi());
+
+        // This listener is ONLY for setting precise, future reminders
+        binding.buttonAddReminder.setOnClickListener(v -> showDatePickerDialog());
         binding.chipRemoveReminder.setOnClickListener(v -> removeReminder());
-        binding.chipMarkExpense.setOnClickListener(v -> markAsExpense());
+
+        // This listener REVEALS the expense date options
+        binding.chipMarkExpense.setOnClickListener(v -> {
+            binding.expenseDateLayout.setVisibility(View.VISIBLE);
+            binding.chipMarkExpense.setVisibility(View.GONE); // Hide the original chip
+        });
+
+        // These listeners are ONLY for setting and saving an expense
+        binding.chipToday.setOnClickListener(v -> saveAsExpense(getStartOfDay()));
+        binding.chipYesterday.setOnClickListener(v -> saveAsExpense(getYesterday()));
+        binding.chipCustomExpenseDate.setOnClickListener(v -> showExpenseDatePicker());
     }
 
+    private void saveAsExpense(long transactionTime) {
+        String title = binding.editTextTitle.getText().toString().trim();
+        String description = binding.editTextDescription.getText().toString().trim();
+        if (TextUtils.isEmpty(title)) {
+            Toast.makeText(this, "Please enter a title first.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final ReminderItem itemToSave = isEditMode ? currentItem : new ReminderItem();
+        itemToSave.title = title;
+        itemToSave.description = description;
+        itemToSave.category = "RECEIPT";
+        itemToSave.reminderTime = transactionTime; // Set the correct transaction date
+        itemToSave.isActive = false;
+        itemToSave.amount = extractAmountFromText(title + " " + description);
+
+        if (isEditMode) {
+            reminderViewModel.update(itemToSave);
+            Toast.makeText(this, "Expense updated!", Toast.LENGTH_SHORT).show();
+        } else {
+            reminderViewModel.insert(itemToSave);
+            Toast.makeText(this, "Expense saved!", Toast.LENGTH_SHORT).show();
+        }
+        finish();
+    }
+
+    // ✅ NEW METHOD: A separate date picker just for expenses
+    private void showExpenseDatePicker() {
+        Calendar cal = Calendar.getInstance();
+        new DatePickerDialog(this, (view, year, month, day) -> {
+            Calendar expenseCalendar = Calendar.getInstance();
+            expenseCalendar.set(year, month, day);
+            saveAsExpense(expenseCalendar.getTimeInMillis());
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+    }
     private void populateUI(ReminderItem item) {
         binding.editTextTitle.setText(item.title);
         binding.editTextDescription.setText(item.description);
@@ -277,34 +324,6 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private void markAsExpense() {
-        final ReminderItem itemToMark = isEditMode ? currentItem : new ReminderItem();
-        if (!isEditMode) {
-            itemToMark.title = binding.editTextTitle.getText().toString().trim();
-            itemToMark.description = binding.editTextDescription.getText().toString().trim();
-        }
-
-        if (TextUtils.isEmpty(itemToMark.title)) {
-            Toast.makeText(this, "Please enter a title first.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        itemToMark.category = "RECEIPT";
-        itemToMark.reminderTime = System.currentTimeMillis(); // Set transaction date to NOW
-        itemToMark.isActive = false;
-        String combinedText = itemToMark.title + " " + itemToMark.description;
-        itemToMark.amount = parseAmount(combinedText);
-
-        if (isEditMode) {
-            reminderViewModel.update(itemToMark);
-            Toast.makeText(this, "Item moved to Expenses", Toast.LENGTH_SHORT).show();
-        } else {
-            reminderViewModel.insert(itemToMark);
-            Toast.makeText(this, "Expense saved!", Toast.LENGTH_SHORT).show();
-        }
-        finish();
-    }
-
     private void saveItemManually() {
         String title = binding.editTextTitle.getText().toString().trim();
         String description = binding.editTextDescription.getText().toString().trim();
@@ -336,10 +355,10 @@ public class DetailActivity extends AppCompatActivity {
         } else {
             itemToSave.isActive = false;
             if ("RECEIPT".equals(itemToSave.category)) {
-                if (itemToSave.reminderTime == 0) {
-                    itemToSave.reminderTime = System.currentTimeMillis();
-                }
-            } else {
+                String combinedText = itemToSave.title + " " + itemToSave.description;
+                itemToSave.amount = extractAmountFromText(combinedText);
+            }
+            else {
                 itemToSave.category = "NOTE";
                 itemToSave.reminderTime = 0;
             }
@@ -416,6 +435,52 @@ public class DetailActivity extends AppCompatActivity {
             new android.os.Handler(getMainLooper()).postDelayed(this::finish, 3000);
         }
     }
+    private long getStartOfDay() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTimeInMillis();
+    }
+
+    private long getStartOfWeek() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTimeInMillis();
+    }
+    private void setDate(long timeInMillis) {
+        if (reminderCalendar == null) {
+            reminderCalendar = Calendar.getInstance();
+        }
+        reminderCalendar.setTimeInMillis(timeInMillis);
+        isReminderSet = true;
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy", Locale.US);
+        binding.dateSelectionTitle.setText("Date set to: " + sdf.format(reminderCalendar.getTime()));
+        Toast.makeText(this, "Date set!", Toast.LENGTH_SHORT).show();
+    }
+    private long getStartOfMonth() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTimeInMillis();
+    }
+    private long getYesterday() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, -1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTimeInMillis();
+    }
     private double parseAmount(String amountStr) {
         if (amountStr == null || amountStr.equalsIgnoreCase("N/A")) {
             return 0.0;
@@ -433,5 +498,22 @@ public class DetailActivity extends AppCompatActivity {
         } catch (NumberFormatException e) {
             return 0.0;
         }
+    }
+    private double extractAmountFromText(String text) {
+        if (text == null || text.isEmpty()) {
+            return 0.0;
+        }
+        try {
+            // This regular expression finds the first sequence of digits, allowing for a decimal point.
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d+\\.?\\d*|\\.\\d+)");
+            java.util.regex.Matcher matcher = pattern.matcher(text);
+            if (matcher.find()) {
+                String numberStr = matcher.group(0);
+                return Double.parseDouble(numberStr);
+            }
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+        return 0.0;
     }
 }
