@@ -1,5 +1,6 @@
 package com.example.smartc;
 
+import org.json.JSONArray; // ✅ The missing import
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
@@ -21,6 +22,7 @@ import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.java.GenerativeModelFutures;
 import com.google.ai.client.generativeai.type.Content;
 import com.google.ai.client.generativeai.type.GenerateContentResponse;
+import com.google.ai.client.generativeai.type.GenerationConfig;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -47,6 +49,7 @@ public class DetailActivity extends AppCompatActivity {
     private final Executor backgroundExecutor = Executors.newSingleThreadExecutor();
     private long lastApiCallTime = 0;
 
+    private static final String TAG = "AI_DEBUG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +124,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void analyzeTextWithAi() {
-        if (System.currentTimeMillis() - lastApiCallTime < 10000) { // 10000 milliseconds = 10 seconds
+        if (System.currentTimeMillis() - lastApiCallTime < 10000) {
             Toast.makeText(this, "Please wait a moment before analyzing again.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -139,52 +142,95 @@ public class DetailActivity extends AppCompatActivity {
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        String currentDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.US).format(new Date());
-        String textPromptTemplate = "Your SOLE TASK is to analyze the content (image or text) and respond with a single, valid JSON object and NOTHING ELSE. Your entire response must be ONLY the JSON object. Do not include any explanatory text, greetings, or markdown formatting like ```json. The current date is %s. " +
-                "First, determine the primary category from this list: [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. " +
-                "A \"BILL\" is a request for future payment. A \"RECEIPT\" is proof of a past payment. A \"TICKET\" is for an event. A \"TASK\" is a direct command. A \"NOTE\" is everything else. " +
-                "Second, create a JSON object with these keys: \"category\", \"title\", \"description\", \"tags\", \"amount\", and a nested \"reminder\" object. " +
-                "\"description\" is the most important field; if the category is 'NOTE', paraphrase the original text to improve clarity and style. For all other categories, provide a detailed summary of all information. " +
-                "\"reminder\" is an object containing \"is_reminder\" (boolean), \"date\" (YYYY-MM-DD or \"N/A\"), and \"time\" (HH:mm, default to \"09:00\" if not found). " +
-                "Example for a task: {\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"remind me to wish vishal happy birthday on august 28th\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"09:00\"}}";
-        String finalPrompt = String.format(textPromptTemplate, currentDate);
+        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+        String textPromptTemplate = "Your SOLE TASK is to analyze the content and respond ONLY with a valid JSON array that conforms to the following schema. The current date is %s. " +
+                "Do not include any extra text, explanations, or markdown. Your response must be a raw JSON array starting with [ and ending with ].\n\n" +
+                "**JSON Schema:**\n" +
+                "[\n" +
+                "  {\n" +
+                "    \"category\": \"(String) One of: BILL, RECEIPT, TICKET, TASK, NOTE\",\n" +
+                "    \"title\": \"(String) A short summary of the item.\",\n" +
+                "    \"description\": \"(String) A detailed summary. If the category is 'NOTE', paraphrase the original content.\",\n" +
+                "    \"tags\": \"(String Array) 1-3 relevant, lowercase tags.\",\n" +
+                "    \"amount\": \"(String) The monetary value for a BILL or RECEIPT. For all others, use 'N/A'.\",\n" +
+                "    \"reminder\": {\n" +
+                "      \"is_reminder\": \"(Boolean) true for BILL, TICKET, TASK. false for others.\",\n" +
+                "      \"date\": \"(String) Date in YYYY-MM-DD format. For a RECEIPT with no date, use the current date (%s). For others with no date, use 'N/A'.\",\n" +
+                "      \"time\": \"(String) Time in HH:mm format. Default to '09:00' if a date exists but no time is found. Use 'N/A' if no date.\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "]";
+
+        String finalPrompt = String.format(textPromptTemplate, currentDate, currentDate);
 
         Content content = new Content.Builder().addText(finalPrompt + "\n\nHere is the text to analyze:\n" + combinedText).build();
+
+        // START: New Logging
+        String exampleJson = "[{\"category\":\"...\",\"title\":\"...\",\"description\":\"...\",\"tags\":[\"...\"],\"amount\":\"...\",\"reminder\":{...}}]";
+        Log.d("AI_DEBUG", "EXPECTED JSON FORMAT: " + exampleJson);
+        Log.d("AI_DEBUG", "Preparing to call Gemini API...");
+        // END: New Logging
+
         ListenableFuture<GenerateContentResponse> future = generativeModel.generateContent(content);
 
         Futures.addCallback(future, new FutureCallback<GenerateContentResponse>() {
             @Override
             public void onSuccess(GenerateContentResponse result) {
+                lastApiCallTime = System.currentTimeMillis();
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
+                    // Log the actual response received
+                    Log.d("AI_DEBUG", "RECEIVED RAW RESPONSE: " + result.getText());
                     processAndSaveAiResponse(result.getText());
                 });
             }
 
             @Override
             public void onFailure(Throwable t) {
+                Log.e("AI_FAILURE", "Full API Error: ", t);
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
-                    Toast.makeText(DetailActivity.this, "AI analysis failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(DetailActivity.this, "AI analysis failed: " + t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }, backgroundExecutor);
     }
-
+    // Use this method in BOTH ShareActivity.java and DetailActivity.java
     private void processAndSaveAiResponse(String responseText) {
-        if (responseText == null || !responseText.contains("{") || !responseText.contains("}")) {
-            Toast.makeText(this, "AI response was not in the expected format.", Toast.LENGTH_SHORT).show();
+        Log.d("AI_DEBUG", "RECEIVED RAW RESPONSE: " + responseText);
+        if (responseText == null) {
+            showError("AI returned an empty response.");
             return;
         }
+
+        // START: JSON Cleaning Logic
+        int startIndex = responseText.indexOf("[");
+        int endIndex = responseText.lastIndexOf("]");
+
+        if (startIndex == -1 || endIndex == -1 || endIndex < startIndex) {
+            showError("Could not find valid JSON in the AI response.");
+            return;
+        }
+
+        String jsonString = responseText.substring(startIndex, endIndex + 1);
+        Log.d("AI_DEBUG", "EXTRACTED JSON: " + jsonString);
+        // END: JSON Cleaning Logic
+
         try {
-            String jsonString = responseText.substring(responseText.indexOf("{"), responseText.lastIndexOf("}") + 1);
-            JSONObject json = new JSONObject(jsonString);
+            JSONArray jsonArray = new JSONArray(jsonString);
+            if (jsonArray.length() == 0) {
+                Toast.makeText(this, "AI could not find any items to save.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // In DetailActivity, "Smart Analyze" only processes the FIRST item found.
+            JSONObject json = jsonArray.getJSONObject(0);
 
             ReminderItem itemToSave = isEditMode ? currentItem : new ReminderItem();
             itemToSave.category = json.getString("category");
             itemToSave.title = json.getString("title");
             itemToSave.description = json.getString("description");
-            itemToSave.amount = json.getString("amount");
+            itemToSave.amount = parseAmount(json.getString("amount"));
             itemToSave.tags = json.getJSONArray("tags").toString();
 
             if (isEditMode && itemToSave.isActive) {
@@ -192,19 +238,25 @@ public class DetailActivity extends AppCompatActivity {
             }
 
             JSONObject reminderObject = json.getJSONObject("reminder");
-            if (reminderObject.getBoolean("is_reminder")) {
-                String dateStr = reminderObject.getString("date");
+            boolean isReminder = reminderObject.getBoolean("is_reminder");
+            String dateStr = reminderObject.getString("date");
+
+            if (isReminder && !"N/A".equals(dateStr)) {
                 String timeStr = reminderObject.getString("time");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+                Date date = sdf.parse(dateStr + " " + timeStr);
+                itemToSave.reminderTime = date.getTime();
+                itemToSave.isActive = true;
+                ReminderManager.setReminder(this, itemToSave.reminderTime, itemToSave.title, itemToSave.description);
+            } else if ("RECEIPT".equals(itemToSave.category)) {
                 if (!"N/A".equals(dateStr)) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
-                    Date date = sdf.parse(dateStr + " " + timeStr);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    Date date = sdf.parse(dateStr);
                     itemToSave.reminderTime = date.getTime();
-                    itemToSave.isActive = true;
-                    ReminderManager.setReminder(this, itemToSave.reminderTime, itemToSave.title, itemToSave.description);
                 } else {
-                    itemToSave.reminderTime = 0;
-                    itemToSave.isActive = false;
+                    itemToSave.reminderTime = System.currentTimeMillis();
                 }
+                itemToSave.isActive = false;
             } else {
                 itemToSave.reminderTime = 0;
                 itemToSave.isActive = false;
@@ -221,28 +273,27 @@ public class DetailActivity extends AppCompatActivity {
 
         } catch (JSONException | ParseException e) {
             Log.e("AI_SAVE_ERROR", "Error processing or saving AI response", e);
-            Toast.makeText(this, "Could not process AI response.", Toast.LENGTH_SHORT).show();
+            showError("Could not process AI response.");
         }
-    }
-
-    private void removeReminder() {
-        isReminderSet = false;
-        binding.reminderDetailsLayout.setVisibility(View.GONE);
-        binding.buttonAddReminder.setText("Add Reminder");
-        binding.chipRemoveReminder.setVisibility(View.GONE);
-        Toast.makeText(this, "Reminder removed. Click 'Save Changes' to confirm.", Toast.LENGTH_SHORT).show();
     }
 
     private void markAsExpense() {
         final ReminderItem itemToMark = isEditMode ? currentItem : new ReminderItem();
-
-        // Populate with current text if it's a new item
         if (!isEditMode) {
             itemToMark.title = binding.editTextTitle.getText().toString().trim();
             itemToMark.description = binding.editTextDescription.getText().toString().trim();
         }
 
+        if (TextUtils.isEmpty(itemToMark.title)) {
+            Toast.makeText(this, "Please enter a title first.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         itemToMark.category = "RECEIPT";
+        itemToMark.reminderTime = System.currentTimeMillis(); // Set transaction date to NOW
+        itemToMark.isActive = false;
+        String combinedText = itemToMark.title + " " + itemToMark.description;
+        itemToMark.amount = parseAmount(combinedText);
 
         if (isEditMode) {
             reminderViewModel.update(itemToMark);
@@ -263,12 +314,9 @@ public class DetailActivity extends AppCompatActivity {
             return;
         }
 
-        final ReminderItem itemToSave = isEditMode ? currentItem : new ReminderItem();
-        if (!isEditMode) {
-            // If user marked it as expense before saving, respect that
-            if (!"RECEIPT".equals(itemToSave.category)) {
-                itemToSave.category = "NOTE";
-            }
+        final ReminderItem itemToSave = isEditMode ? currentItem : (currentItem != null ? currentItem : new ReminderItem());
+        if (!isEditMode && !"RECEIPT".equals(itemToSave.category)) {
+            itemToSave.category = "NOTE";
         }
 
         itemToSave.title = title;
@@ -279,18 +327,22 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         if (isReminderSet) {
-            if (!"BILL".equals(itemToSave.category) && !"TICKET".equals(itemToSave.category)) {
+            if (!"BILL".equals(itemToSave.category) && !"TICKET".equals(itemToSave.category) && !"RECEIPT".equals(itemToSave.category)) {
                 itemToSave.category = "TASK";
             }
             itemToSave.reminderTime = reminderCalendar.getTimeInMillis();
             itemToSave.isActive = true;
             ReminderManager.setReminder(this, itemToSave.reminderTime, itemToSave.title, itemToSave.description);
         } else {
-            if (!"RECEIPT".equals(itemToSave.category)) {
-                itemToSave.category = "NOTE";
-            }
-            itemToSave.reminderTime = 0;
             itemToSave.isActive = false;
+            if ("RECEIPT".equals(itemToSave.category)) {
+                if (itemToSave.reminderTime == 0) {
+                    itemToSave.reminderTime = System.currentTimeMillis();
+                }
+            } else {
+                itemToSave.category = "NOTE";
+                itemToSave.reminderTime = 0;
+            }
         }
 
         if (isEditMode) {
@@ -301,6 +353,13 @@ public class DetailActivity extends AppCompatActivity {
             Toast.makeText(this, "Item saved!", Toast.LENGTH_SHORT).show();
         }
         finish();
+    }
+    private void removeReminder() {
+        isReminderSet = false;
+        binding.reminderDetailsLayout.setVisibility(View.GONE);
+        binding.buttonAddReminder.setText("Add Reminder");
+        binding.chipRemoveReminder.setVisibility(View.GONE);
+        Toast.makeText(this, "Reminder removed. Click 'Save Changes' to confirm.", Toast.LENGTH_SHORT).show();
     }
 
     private void showDeleteConfirmationDialog() {
@@ -348,5 +407,31 @@ public class DetailActivity extends AppCompatActivity {
         binding.textViewSelectedDate.setText(formattedDate);
         binding.buttonAddReminder.setText("Edit Reminder");
         binding.chipRemoveReminder.setVisibility(View.VISIBLE);
+    }
+
+    private void showError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        // Handler to close the activity after a delay if it's an unrecoverable error
+        if (!isEditMode) { // Only finish if it's a new item creation that failed
+            new android.os.Handler(getMainLooper()).postDelayed(this::finish, 3000);
+        }
+    }
+    private double parseAmount(String amountStr) {
+        if (amountStr == null || amountStr.equalsIgnoreCase("N/A")) {
+            return 0.0;
+        }
+        try {
+            // This removes currency symbols, commas, and letters, then converts to a number
+            String cleanStr = amountStr.toLowerCase()
+                    .replace("rs", "")
+                    .replace("inr", "")
+                    .replace("₹", "")
+                    .replaceAll(",", "")
+                    .trim();
+            if (cleanStr.isEmpty()) return 0.0;
+            return Double.parseDouble(cleanStr);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
 }

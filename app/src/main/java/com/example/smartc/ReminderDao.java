@@ -6,7 +6,6 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
-
 import java.util.List;
 
 @Dao
@@ -21,27 +20,15 @@ public interface ReminderDao {
     @Delete
     void delete(ReminderItem item);
 
-    // ✅ This is the main change. We are modifying your existing query.
-    @Query("SELECT * FROM reminder_items ORDER BY type DESC, reminderTime ASC")
+    @Query("SELECT * FROM reminder_items ORDER BY id DESC")
     LiveData<List<ReminderItem>> getAllItems();
 
-    // Your other methods are great, we'll keep them.
-    @Query("DELETE FROM reminder_items WHERE id = :itemId")
-    void deleteById(int itemId);
-
-    @Query("UPDATE reminder_items SET isActive = :isActive WHERE id = :itemId")
-    void updateIsActive(int itemId, boolean isActive);
-
-    // Add this to ReminderDao.java
     @Query("SELECT * FROM reminder_items WHERE id = :itemId")
     LiveData<ReminderItem> getById(int itemId);
-
-    // Add this method to ReminderDao.java
 
     @Query("SELECT * FROM reminder_items WHERE category = :category ORDER BY id DESC")
     LiveData<List<ReminderItem>> getItemsByCategory(String category);
 
-    // ✅ ADD THIS METHOD for the combined Reminders tab
-    @Query("SELECT * FROM reminder_items WHERE category IN (:categories) ORDER BY reminderTime ASC")
+    @Query("SELECT * FROM reminder_items WHERE category IN (:categories) ORDER BY id DESC")
     LiveData<List<ReminderItem>> getItemsByCategories(String[] categories);
 }

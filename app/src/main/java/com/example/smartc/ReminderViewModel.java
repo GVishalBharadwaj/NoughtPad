@@ -21,37 +21,11 @@ public class ReminderViewModel extends AndroidViewModel {
         allItems = reminderDao.getAllItems();
     }
 
-    // This method gets all items and is already correct.
-    public LiveData<List<ReminderItem>> getAllItems() {
-        return allItems;
-    }
-
-    // ✅ ADD THIS METHOD to save new items to the database.
-    public void insert(ReminderItem item) {
-        executor.execute(() -> reminderDao.insert(item));
-    }
-
-    // This delete method is also correct and we will use it later.
-    public void delete(ReminderItem item) {
-        executor.execute(() -> reminderDao.deleteById(item.id));
-    }
-
-    // Add these methods to ReminderViewModel.java
-    public LiveData<ReminderItem> getById(int itemId) {
-        return reminderDao.getById(itemId);
-    }
-
-    public void update(ReminderItem item) {
-        executor.execute(() -> reminderDao.update(item));
-    }
-
-    // Add this method to ReminderViewModel.java
-    public LiveData<List<ReminderItem>> getItemsByCategory(String category) {
-        return reminderDao.getItemsByCategory(category);
-    }
-
-    // ✅ ADD THIS METHOD
-    public LiveData<List<ReminderItem>> getItemsByCategories(String[] categories) {
-        return reminderDao.getItemsByCategories(categories);
-    }
+    public LiveData<List<ReminderItem>> getAllItems() { return allItems; }
+    public void insert(ReminderItem item) { executor.execute(() -> reminderDao.insert(item)); }
+    public void update(ReminderItem item) { executor.execute(() -> reminderDao.update(item)); }
+    public void delete(ReminderItem item) { executor.execute(() -> reminderDao.delete(item)); }
+    public LiveData<ReminderItem> getById(int itemId) { return reminderDao.getById(itemId); }
+    public LiveData<List<ReminderItem>> getItemsByCategories(String[] categories) { return reminderDao.getItemsByCategories(categories); }
+    public LiveData<List<ReminderItem>> getItemsByCategory(String category) { return reminderDao.getItemsByCategory(category); }
 }

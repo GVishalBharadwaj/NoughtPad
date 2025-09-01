@@ -12,7 +12,7 @@ public class ReminderItem {
     public String content = "";
     public String type = "";
     public String details = "";
-    public String amount = "";
+    public double amount;
 
     public String title = ""; // ✅ The field that was missing
 

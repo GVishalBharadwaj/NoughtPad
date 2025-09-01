@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+import org.json.JSONArray; // ✅ The missing import
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -158,14 +159,22 @@ public class ShareActivity extends AppCompatActivity {
         builder.show();
     }
     private void analyzeText(String text, @Nullable String customTitle) {
-        String currentDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.US).format(new Date());
-        String textPromptTemplate = "Your SOLE TASK is to analyze the following text and respond with a single, valid JSON object and NOTHING ELSE. Your entire response must be ONLY the JSON object. Do not include any explanatory text, greetings, or markdown formatting like ```json. The current date is %s. " +
-                "First, determine the primary category from this list: [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. A \"TASK\" is a direct command or personal reminder. " +
-                "Second, create a JSON object with the following keys: \"category\", \"title\", \"description\", \"tags\", \"amount\", and a nested \"reminder\" object. " +
-                "\"description\" is the most important field; use the full text or a detailed summary. " +
-                "\"reminder\" is an object containing \"is_reminder\" (boolean, true for BILL/TICKET/TASK), \"date\" (YYYY-MM-DD, calculated from text like 'tomorrow'), and \"time\" (HH:mm, default to \"00:00\" if not found). If is_reminder is false, date and time MUST be \"N/A\". " +
-                "Example for a Task: Text input: \"remind me to wish vishal happy birthday on august 28th\". Response: {\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"remind me to wish vishal happy birthday on august 28th\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"00:00\"}}";
-        String finalPrompt = String.format(textPromptTemplate, currentDate);
+        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+        String textPromptTemplate = "Your SOLE TASK is to analyze the following text and respond ONLY with a single, valid JSON array. The current date is %s. " +
+                "Your entire response must be a JSON array, even if only one item is found. If no items are found, return an empty array []. " +
+                "Do not include any extra text, explanations, or markdown formatting like ```json. Your response must start with [ and end with ]. " +
+                "For each distinct item you find, create a JSON object with these keys: " +
+                "1. \"category\": (String) Classify into [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. " +
+                "2. \"title\": (String) A short summary. " +
+                "3. \"description\": (String) This is a critical field. If the category is \"NOTE\", you MUST paraphrase the content. For ALL other categories, provide a detailed summary. " +
+                "4. \"tags\": (String Array) 1-3 relevant, lowercase tags. " +
+                "5. \"amount\": (String) The total value for a BILL or RECEIPT. For others, it MUST be \"N/A\". " +
+                "6. \"reminder\": (Object) A nested object with these keys: " +
+                "- \"is_reminder\": (Boolean) Must be `true` for BILL, TICKET, and TASK. Must be `false` for RECEIPT and NOTE. " +
+                "- \"date\": (String) The date in YYYY-MM-DD format. IMPORTANT: If the category is \"RECEIPT\" and no date is found, you MUST use the current date (%s). For all other types without a date, use \"N/A\". " +
+                "- \"time\": (String) The time in 24-hour HH:mm format. If a date exists but no time, use \"09:00\". If no date, use \"N/A\". " +
+                "Example: [{\"category\":\"TASK\",\"title\":\"Wish Vishal Happy Birthday\",\"description\":\"Remind me to wish Vishal a happy birthday on August 28th.\",\"tags\":[\"birthday\",\"personal\"],\"amount\":\"N/A\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-08-28\",\"time\":\"09:00\"}}]";
+        String finalPrompt = String.format(textPromptTemplate, currentDate, currentDate);
 
         if (customTitle != null && !customTitle.isEmpty()) {
             finalPrompt += "\n\nIMPORTANT: You MUST use the following text as the 'title' in your JSON response: \"" + customTitle + "\"";
@@ -192,19 +201,22 @@ public class ShareActivity extends AppCompatActivity {
             try {
                 Bitmap originalBitmap = uriToBitmap(uri);
                 Bitmap bitmap = scaleBitmap(originalBitmap);
-                String currentDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.US).format(new Date());
-                String imagePromptTemplate = "Your SOLE TASK is to analyze the image and respond with a single, valid JSON object and NOTHING ELSE. Your entire response must be ONLY the JSON object. Do not include any explanatory text, greetings, or markdown formatting like ```json. The current date is %s. " +
-                        "Analyze the image to determine its \"category\" from [\"BILL\", \"RECEIPT\", \"TICKET\", \"NOTE\"]. " +
-                        "- A \"BILL\" is a request for future payment. " +
-                        "- A \"RECEIPT\" is a proof of a past payment. " +
-                        "- A \"TICKET\" is for an event or travel. " +
-                        "- A \"NOTE\" is for everything else. " +
-                        "Populate a JSON object with these keys: \"category\", \"title\", \"description\", \"tags\", \"amount\", and a nested \"reminder\" object. " +
-                        "\"description\" is the most important field; provide a detailed summary of all information in the image. " +
-                        "\"reminder\" is an object containing \"is_reminder\" (boolean), \"date\" (YYYY-MM-DD or \"N/A\"), and \"time\" (HH:mm or \"N/A\", default to \"00:00\" if a date exists but no time). " +
-                        "Example for a bill: " +
-                        "{\"category\":\"BILL\",\"title\":\"Pay Electricity Bill\",\"description\":\"Bill for account 12345 from Telangana Power.\",\"tags\":[\"bill\",\"utility\",\"finance\"],\"amount\":\"₹1570.00\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-09-10\",\"time\":\"00:00\"}}";
-                String finalPrompt = String.format(imagePromptTemplate, currentDate);
+                String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+                String imagePromptTemplate = "Your SOLE TASK is to analyze the provided image and respond ONLY with a single, valid JSON array. The current date is %s. " +
+                        "Your entire response must be a JSON array, even if only one item is found. If no items are found, return an empty array []. " +
+                        "Do not include any extra text, explanations, or markdown formatting like ```json. Your response must start with [ and end with ]. " +
+                        "For each distinct item you find in the image, create a JSON object with these keys: " +
+                        "1. \"category\": (String) Classify into [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. " +
+                        "2. \"title\": (String) A short summary. " +
+                        "3. \"description\": (String) This is a critical field. If the category is \"NOTE\" (like a handwritten list), you MUST paraphrase the content. For ALL other categories, provide a detailed summary of all information. " +
+                        "4. \"tags\": (String Array) 1-3 relevant, lowercase tags. " +
+                        "5. \"amount\": (String) The total value for a BILL or RECEIPT. For others, it MUST be \"N/A\". " +
+                        "6. \"reminder\": (Object) A nested object with these keys: " +
+                        "- \"is_reminder\": (Boolean) Must be `true` for BILL, TICKET, and TASK. Must be `false` for RECEIPT and NOTE. " +
+                        "- \"date\": (String) The date in YYYY-MM-DD format. IMPORTANT: If the category is \"RECEIPT\" and no date is found, you MUST use the current date (%s). For all other types without a date, use \"N/A\". " +
+                        "- \"time\": (String) The time in 24-hour HH:mm format. If a date exists but no time, use \"09:00\". If no date, use \"N/A\". " +
+                        "Example for a bill: [{\"category\":\"BILL\",\"title\":\"Pay Electricity Bill\",\"description\":\"Bill for account 12345 from Telangana Power.\",\"tags\":[\"bill\",\"utility\",\"finance\"],\"amount\":\"₹1570.00\",\"reminder\":{\"is_reminder\":true,\"date\":\"2025-09-10\",\"time\":\"09:00\"}}]";
+                String finalPrompt = String.format(imagePromptTemplate, currentDate, currentDate);
 
                 if (customTitle != null && !customTitle.isEmpty()) {
                     finalPrompt += "\n\nIMPORTANT: You MUST use the following text as the 'title' in your JSON response: \"" + customTitle + "\"";
@@ -233,51 +245,80 @@ public class ShareActivity extends AppCompatActivity {
 
     private void processApiResponse(String responseText) {
         Log.d("GEMINI_RESPONSE", "Full API Response: " + responseText);
-        if (responseText == null || !responseText.contains("{") || !responseText.contains("}")) {
-            showError("AI response was not in the expected format.");
+
+        if (responseText == null || !responseText.trim().startsWith("[")) {
+            showError("AI response was not in the expected array format.");
+            finish();
             return;
         }
+
         try {
-            String jsonString = responseText.substring(responseText.indexOf("{"), responseText.lastIndexOf("}") + 1);
-            JSONObject json = new JSONObject(jsonString);
+            JSONArray jsonArray = new JSONArray(responseText);
+            int itemsSaved = 0;
 
-            ReminderItem newItem = new ReminderItem();
-            newItem.category = json.getString("category");
-            newItem.title = json.getString("title");
-            newItem.description = json.getString("description");
-            newItem.amount = json.getString("amount");
-            newItem.tags = json.getJSONArray("tags").toString();
+            // Loop through each JSON object in the array
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject json = jsonArray.getJSONObject(i);
 
-            JSONObject reminderObject = json.getJSONObject("reminder");
-            boolean isReminder = reminderObject.getBoolean("is_reminder");
+                ReminderItem newItem = new ReminderItem();
+                newItem.category = json.getString("category");
+                newItem.title = json.getString("title");
+                newItem.description = json.getString("description");
+                newItem.tags = json.getJSONArray("tags").toString();
+                newItem.amount = parseAmount(json.getString("amount"));
 
-            if (isReminder) {
+                JSONObject reminderObject = json.getJSONObject("reminder");
+                boolean isReminder = reminderObject.getBoolean("is_reminder");
                 String dateStr = reminderObject.getString("date");
-                String timeStr = reminderObject.getString("time");
 
-                if (!"N/A".equals(dateStr)) {
+                // This is the definitive logic for handling dates for all categories
+                if (isReminder && !"N/A".equals(dateStr)) {
+                    // This is a BILL, TICKET, or TASK with a specific date. Set an alarm.
+                    String timeStr = reminderObject.getString("time");
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
                     Date date = sdf.parse(dateStr + " " + timeStr);
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTime(date);
-                    newItem.reminderTime = calendar.getTimeInMillis();
+                    newItem.reminderTime = date.getTime();
                     newItem.isActive = true;
                     ReminderManager.setReminder(this, newItem.reminderTime, newItem.title, newItem.description);
+                } else if ("RECEIPT".equals(newItem.category) && !"N/A".equals(dateStr)) {
+                    // This is an EXPENSE. Save the date for tracking but DO NOT set an alarm.
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    Date date = sdf.parse(dateStr);
+                    newItem.reminderTime = date.getTime();
+                    newItem.isActive = false;
                 } else {
-                    isReminder = false;
+                    // This is a simple NOTE or an item without a valid date.
+                    newItem.reminderTime = 0;
+                    newItem.isActive = false;
                 }
+
+                // This is the debug logging you requested
+                String readableDate = "N/A";
+                if (newItem.reminderTime > 0) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+                    readableDate = sdf.format(new Date(newItem.reminderTime));
+                }
+                Log.d("ITEM_DEBUG", "--- Item Values Before Saving ---");
+                Log.d("ITEM_DEBUG", "Category: " + newItem.category);
+                Log.d("ITEM_DEBUG", "Title: " + newItem.title);
+                Log.d("ITEM_DEBUG", "Amount: " + newItem.amount);
+                Log.d("ITEM_DEBUG", "isActive: " + newItem.isActive);
+                Log.d("ITEM_DEBUG", "reminderTime (timestamp): " + newItem.reminderTime);
+                Log.d("ITEM_DEBUG", "reminderTime (readable): " + readableDate);
+                Log.d("ITEM_DEBUG", "------------------------------------");
+
+                reminderViewModel.insert(newItem);
+                itemsSaved++;
             }
 
-            if (!isReminder) {
-                newItem.reminderTime = 0;
-                newItem.isActive = false;
+            if (itemsSaved > 0) {
+                Toast.makeText(this, itemsSaved + " item(s) saved!", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "No items were found to save.", Toast.LENGTH_LONG).show();
             }
-
-            reminderViewModel.insert(newItem);
-            Toast.makeText(this, newItem.category + " saved!", Toast.LENGTH_LONG).show();
 
         } catch (JSONException | ParseException e) {
-            Log.e("JSON_PARSE_ERROR", "Error parsing API response: " + responseText, e);
+            Log.e("JSON_PARSE_ERROR", "Error parsing API response array: " + responseText, e);
             showError("Could not parse details from the content.");
         } finally {
             finish();
@@ -306,5 +347,23 @@ public class ShareActivity extends AppCompatActivity {
     private void showError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         new android.os.Handler(getMainLooper()).postDelayed(this::finish, 3000);
+    }
+    private double parseAmount(String amountStr) {
+        if (amountStr == null || amountStr.equalsIgnoreCase("N/A")) {
+            return 0.0;
+        }
+        try {
+            // This removes currency symbols, commas, and letters, then converts to a number
+            String cleanStr = amountStr.toLowerCase()
+                    .replace("rs", "")
+                    .replace("inr", "")
+                    .replace("₹", "")
+                    .replaceAll(",", "")
+                    .trim();
+            if (cleanStr.isEmpty()) return 0.0;
+            return Double.parseDouble(cleanStr);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
 }
