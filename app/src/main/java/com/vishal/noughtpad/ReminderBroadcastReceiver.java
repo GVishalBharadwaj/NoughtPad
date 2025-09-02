@@ -1,5 +1,5 @@
-package com.example.smartc;
-// app/src/main/java/com/example/smartreminders/ReminderBroadcastReceiver.java
+package com.vishal.noughtpad;
+// app/src/main/java/com/vishal/smartreminders/ReminderBroadcastReceiver.java
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;

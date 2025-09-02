@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;

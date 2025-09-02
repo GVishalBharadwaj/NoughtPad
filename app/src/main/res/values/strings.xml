@@ -2,24 +2,26 @@
     <string name="app_name">NoughtPad</string>
 
     <string name="privacy_policy_text">
-    "Last Updated: August 28, 2025\n\n"
-    "Thank you for using NoughtPad (\"the App\"). This policy explains what information we collect, how we use it, and your rights in relation to it.\n\n"
+    "<b>Last Updated: September 3, 2025</b>\n\n"
+    "Thank you for using NoughtPad (\"the App\"). This policy explains what information we collect and how it is used and protected.\n\n"
     "<b>1. Information We Collect</b>\n"
-    "We collect the text and images that you manually type, upload from your gallery, capture with your camera, or share with the App from other applications.\n\n"
+    "To provide a multi-device experience, we collect the following information:\n"
+    "  • <b>Account Information:</b> When you create an account, we collect information such as your email address and a unique user ID.\n"
+    "  • <b>User Content:</b> We collect the text, images, and associated data (like reminders and expense details) that you create or share with the App.\n\n"
     "<b>2. How We Use Your Information</b>\n"
-    "Your information is used solely to provide and improve the App\'s functionality. <b>Importantly, none of your personal content (notes, images, etc.) is ever stored on our servers or databases.</b> Your data exists in only two places: locally on your device and temporarily for processing by the Google Gemini API.\n\n"
-    "  - <b>To Store Your Notes on Your Device:</b> Your processed content is saved locally in a private database on your own mobile device.\n"
-    "  - <b>To Provide AI Features:</b> To power our \"Smart Analyze\" and content sharing features, the text or image you provide is securely sent directly to the Google Gemini API for analysis.\n\n"
-    "<b>3. Data Sharing and Third Parties</b>\n"
-    "We value your privacy and do not sell your data.\n"
-    "  - <b>Google Gemini API:</b> We share your content with Google LLC to use their Gemini API. According to Google\'s Cloud Data Processing terms, they do not use your API content for any purpose other than to provide the API service. Your data is not used to train their models.\n"
-    "  - <b>Our Servers:</b> We do not have our own servers for storing your personal content. All your notes and reminders are stored exclusively on your local device.\n\n"
-    "<b>4. Data Storage and Security</b>\n"
-    "Your notes and reminders are stored in a private database on your device. On a standard, non-rooted phone, this data is secure and cannot be read by other apps.\n\n"
-    "<b>5. Your Rights</b>\n"
-    "You have the right to access and delete your information at any time. You can do this directly within the App by deleting individual items, or by uninstalling the App to delete the entire local database.\n\n"
-    "<b>6. Contact Us</b>\n"
-    "If you have any questions about this Privacy Policy, you can contact us at: [Your Email Address Here]"
+    "Your information is used to provide and improve the App\'s functionality:\n"
+    "  • <b>To Sync Your Content:</b> Your notes, reminders, and expenses are stored securely on our servers to allow you to access them from any of your devices.\n"
+    "  • <b>To Provide AI Features:</b> To power our \"Smart Analyze\" features, your content is sent securely to Google\'s Generative AI APIs (Gemini) for analysis. Google does not use this data to train their models.\n"
+    "  • <b>For Communication:</b> We may use your email address to send you important information about your account or the App.\n\n"
+    "<b>3. Data Storage and Security</b>\n"
+    "  • <b>Server Storage:</b> Your User Content is stored and encrypted on our secure cloud servers.\n"
+    "  • <b>Local Storage:</b> A copy of your data is also stored in a private database on your local device to enable offline access.\n\n"
+    "<b>4. Data Sharing</b>\n"
+    "We do not sell your data. Your data is only shared with Google for AI processing as described above.\n\n"
+    "<b>5. Your Control and Rights</b>\n"
+    "You have complete control over your data.\n"
+    "  • <b>Deletion:</b> Deleting an item within the App will also delete it from our servers. You can also request the deletion of your entire account.\n\n"
+<!--    "<b>6. Contact Us</b>\n"-->
+<!--    "If you have any questions about this Privacy Policy, you can contact us at:\n<b>[Your Contact Email or Website Here]</b>"-->
 </string>
-
 </resources>

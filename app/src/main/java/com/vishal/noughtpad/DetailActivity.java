@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import org.json.JSONArray; // ✅ The missing import
 import android.app.AlertDialog;
@@ -17,12 +17,11 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
-import com.example.smartc.databinding.ActivityDetailBinding;
+import com.vishal.noughtpad.databinding.ActivityDetailBinding;
 import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.java.GenerativeModelFutures;
 import com.google.ai.client.generativeai.type.Content;
 import com.google.ai.client.generativeai.type.GenerateContentResponse;
-import com.google.ai.client.generativeai.type.GenerationConfig;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;

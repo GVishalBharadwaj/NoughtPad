@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;

@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -21,7 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 
-import com.example.smartc.databinding.ActivityShareBinding;
+import com.vishal.noughtpad.databinding.ActivityShareBinding;
 import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.java.GenerativeModelFutures;
 import com.google.ai.client.generativeai.type.Content;
@@ -36,14 +36,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 // This is the import for BuildConfig
-import com.example.smartc.BuildConfig;
+import com.vishal.noughtpad.BuildConfig;
 
 public class ShareActivity extends AppCompatActivity {
 

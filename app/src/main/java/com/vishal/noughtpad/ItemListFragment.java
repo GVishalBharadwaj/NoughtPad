@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import android.content.Intent;
 import android.os.Bundle;

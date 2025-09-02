@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;

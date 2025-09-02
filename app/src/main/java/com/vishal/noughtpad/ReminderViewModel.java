@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import android.app.Application;
 import androidx.annotation.NonNull;

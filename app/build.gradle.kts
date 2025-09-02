@@ -16,11 +16,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.smartc"
+    namespace = "com.vishal.noughtpad"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.smartc"
+        applicationId = "com.vishal.noughtpad"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

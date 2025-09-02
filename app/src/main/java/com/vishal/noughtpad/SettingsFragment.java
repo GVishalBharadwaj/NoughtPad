@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import android.os.Bundle;
 import androidx.preference.PreferenceFragmentCompat;

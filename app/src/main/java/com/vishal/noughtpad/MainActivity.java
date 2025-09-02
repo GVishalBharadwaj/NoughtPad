@@ -1,4 +1,4 @@
-package com.example.smartc;
+package com.vishal.noughtpad;
 
 import android.Manifest;
 import android.content.Intent;
@@ -20,14 +20,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
-import com.example.smartc.databinding.ActivityMainBinding;
+import com.vishal.noughtpad.databinding.ActivityMainBinding;
 import com.google.android.material.tabs.TabLayoutMediator;
 import java.io.File;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String EXTRA_ID = "com.example.smartc.EXTRA_ID";
+    public static final String EXTRA_ID = "com.vishal.noughtpad.EXTRA_ID";
     private ActivityMainBinding binding;
     private ViewPagerAdapter viewPagerAdapter;
     private ReminderViewModel reminderViewModel; // ViewModel owned by the Activity
