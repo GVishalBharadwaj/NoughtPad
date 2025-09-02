@@ -158,6 +158,7 @@ public class ShareActivity extends AppCompatActivity {
 
         builder.show();
     }
+
     private void analyzeText(String text, @Nullable String customTitle) {
         String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
         String textPromptTemplate = "Your SOLE TASK is to analyze the following text and respond ONLY with a single, valid JSON array. The current date is %s. " +
@@ -188,6 +189,7 @@ public class ShareActivity extends AppCompatActivity {
             public void onSuccess(GenerateContentResponse result) {
                 runOnUiThread(() -> processApiResponse(result.getText()));
             }
+
             @Override
             public void onFailure(Throwable t) {
                 Log.e("ShareActivity", "API call failed for TEXT", t);
@@ -230,6 +232,7 @@ public class ShareActivity extends AppCompatActivity {
                     public void onSuccess(GenerateContentResponse result) {
                         runOnUiThread(() -> processApiResponse(result.getText()));
                     }
+
                     @Override
                     public void onFailure(Throwable t) {
                         Log.e("ShareActivity", "API call failed for IMAGE", t);
@@ -259,7 +262,12 @@ public class ShareActivity extends AppCompatActivity {
             // Loop through each JSON object in the array
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject json = jsonArray.getJSONObject(i);
+                String category = json.getString("category");
+                JSONObject reminderObject = json.getJSONObject("reminder");
+                String dateStr = reminderObject.getString("date");
+                String todayDateStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
 
+                // This is the special case where the AI might be wrong
                 ReminderItem newItem = new ReminderItem();
                 newItem.category = json.getString("category");
                 newItem.title = json.getString("title");
@@ -267,9 +275,7 @@ public class ShareActivity extends AppCompatActivity {
                 newItem.tags = json.getJSONArray("tags").toString();
                 newItem.amount = parseAmount(json.getString("amount"));
 
-                JSONObject reminderObject = json.getJSONObject("reminder");
                 boolean isReminder = reminderObject.getBoolean("is_reminder");
-                String dateStr = reminderObject.getString("date");
 
                 // This is the definitive logic for handling dates for all categories
                 if (isReminder && !"N/A".equals(dateStr)) {
@@ -348,6 +354,7 @@ public class ShareActivity extends AppCompatActivity {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         new android.os.Handler(getMainLooper()).postDelayed(this::finish, 3000);
     }
+
     private double parseAmount(String amountStr) {
         if (amountStr == null || amountStr.equalsIgnoreCase("N/A")) {
             return 0.0;

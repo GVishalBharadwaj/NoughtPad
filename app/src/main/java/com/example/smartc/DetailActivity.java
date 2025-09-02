@@ -463,15 +463,7 @@ public class DetailActivity extends AppCompatActivity {
         binding.dateSelectionTitle.setText("Date set to: " + sdf.format(reminderCalendar.getTime()));
         Toast.makeText(this, "Date set!", Toast.LENGTH_SHORT).show();
     }
-    private long getStartOfMonth() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTimeInMillis();
-    }
+
     private long getYesterday() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, -1);
@@ -516,4 +508,5 @@ public class DetailActivity extends AppCompatActivity {
         }
         return 0.0;
     }
+
 }

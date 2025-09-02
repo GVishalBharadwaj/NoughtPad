@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">SmartC</string>
+    <string name="app_name">NoughtPad</string>
 
     <string name="privacy_policy_text">
     "Last Updated: August 28, 2025\n\n"
-    "Thank you for using Smart AI Notes (\"the App\"). This policy explains what information we collect, how we use it, and your rights in relation to it.\n\n"
+    "Thank you for using NoughtPad (\"the App\"). This policy explains what information we collect, how we use it, and your rights in relation to it.\n\n"
     "<b>1. Information We Collect</b>\n"
     "We collect the text and images that you manually type, upload from your gallery, capture with your camera, or share with the App from other applications.\n\n"
     "<b>2. How We Use Your Information</b>\n"
