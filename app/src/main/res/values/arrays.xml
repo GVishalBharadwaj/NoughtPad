@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="reminder_offset_labels">
+        <item>On time</item>
+        <item>5 minutes before</item>
+        <item>15 minutes before</item>
+        <item>1 hour before</item>
+        <item>1 day before</item>
+    </string-array>
+    <string-array name="reminder_offset_values">
+        <item>0</item>
+        <item>5</item>
+        <item>15</item>
+        <item>60</item>
+        <item>1440</item> </string-array>
+</resources>

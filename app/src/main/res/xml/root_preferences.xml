@@ -5,4 +5,13 @@
             app:title="Set Custom Title"
             app:summary="Show a dialog to set a custom title for shared items before processing." />
     </PreferenceCategory>
+    <PreferenceCategory app:title="Notifications">
+        <ListPreference
+            app:key="reminder_offset"
+            app:title="Remind me"
+            app:summary="%s"
+            app:defaultValue="0"
+            app:entries="@array/reminder_offset_labels"
+            app:entryValues="@array/reminder_offset_values" />
+    </PreferenceCategory>
 </PreferenceScreen>
