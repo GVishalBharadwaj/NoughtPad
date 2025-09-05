@@ -18,7 +18,8 @@ public final class ReminderManager {
 
     private ReminderManager() {}
 
-    public static void setReminder(Context context, long timeInMillis, String title, String message) {
+    // The method signature now includes a boolean "isManualEntry"
+    public static void setReminder(Context context, long timeInMillis, String title, String message, boolean isManualEntry) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -30,37 +31,36 @@ public final class ReminderManager {
             }
         }
 
-        // 1. Get the saved offset value from settings (in minutes)
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String offsetMinutesStr = prefs.getString("reminder_offset", "0");
-        long offsetMinutes = Long.parseLong(offsetMinutesStr);
+        long finalAlarmTime = timeInMillis; // Default to the exact time
 
-        // 2. Convert the offset to milliseconds
-        long offsetMillis = offsetMinutes * 60 * 1000;
-
-        // 3. Calculate the new, earlier alarm time
-        long finalAlarmTime = timeInMillis - offsetMillis;
+        // ✅ START: This is the new conditional logic
+        // ONLY apply the offset if the reminder is NOT a manual entry
+        if (!isManualEntry) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            String offsetMinutesStr = prefs.getString("reminder_offset", "0");
+            long offsetMinutes = Long.parseLong(offsetMinutesStr);
+            long offsetMillis = offsetMinutes * 60 * 1000;
+            finalAlarmTime = timeInMillis - offsetMillis; // Calculate earlier time
+        }
+        // ✅ END: New conditional logic
 
         Intent intent = new Intent(context, ReminderBroadcastReceiver.class);
         intent.putExtra("EXTRA_TITLE", title);
         intent.putExtra("EXTRA_MESSAGE", message);
-        // ✅ Use the final alarm time as the unique ID
         intent.putExtra("EXTRA_ID", (int) finalAlarmTime);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context,
-                (int) finalAlarmTime, // ✅ Use the final alarm time as the unique request code
+                (int) finalAlarmTime,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         if (alarmManager != null) {
             Log.d("AlarmManager", "SETTING alarm with ID: " + finalAlarmTime);
-            // ✅ Use the final alarm time to schedule the alarm
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, finalAlarmTime, pendingIntent);
         }
 
-        // The toast message can still show the original event time for clarity
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(timeInMillis);
         String toastMessage = String.format(Locale.getDefault(), "Reminder set for event at %s", calendar.getTime().toString());

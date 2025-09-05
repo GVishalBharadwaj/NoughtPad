@@ -196,7 +196,7 @@ public class DetailActivity extends AppCompatActivity {
                 "  {\n" +
                 "    \"category\": \"(String) One of: BILL, RECEIPT, TICKET, TASK, NOTE\",\n" +
                 "    \"title\": \"(String) A short summary of the item.\",\n" +
-                "    \"description\": \"(String) A detailed summary. If the category is 'NOTE', paraphrase the original content.\",\n" +
+                "    \"description\": (String) This is a critical field. If the category is \"NOTE\", you MUST extract and list all the important points from the text. For ALL other categories, provide a detailed summary of all information. " +
                 "    \"tags\": \"(String Array) 1-3 relevant, lowercase tags.\",\n" +
                 "    \"amount\": \"(String) The monetary value for a BILL or RECEIPT. For all others, use 'N/A'.\",\n" +
                 "    \"reminder\": {\n" +
@@ -293,7 +293,7 @@ public class DetailActivity extends AppCompatActivity {
                 Date date = sdf.parse(dateStr + " " + timeStr);
                 itemToSave.reminderTime = date.getTime();
                 itemToSave.isActive = true;
-                ReminderManager.setReminder(this, itemToSave.reminderTime, itemToSave.title, itemToSave.description);
+                ReminderManager.setReminder(this, itemToSave.reminderTime, itemToSave.title, itemToSave.description, false);
             } else if ("RECEIPT".equals(itemToSave.category)) {
                 if (!"N/A".equals(dateStr)) {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -350,7 +350,7 @@ public class DetailActivity extends AppCompatActivity {
             }
             itemToSave.reminderTime = reminderCalendar.getTimeInMillis();
             itemToSave.isActive = true;
-            ReminderManager.setReminder(this, itemToSave.reminderTime, itemToSave.title, itemToSave.description);
+            ReminderManager.setReminder(this, itemToSave.reminderTime, itemToSave.title, itemToSave.description, true);
         } else {
             itemToSave.isActive = false;
             if ("RECEIPT".equals(itemToSave.category)) {

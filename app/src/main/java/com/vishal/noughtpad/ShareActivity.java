@@ -166,7 +166,7 @@ public class ShareActivity extends AppCompatActivity {
                 "For each distinct item you find, create a JSON object with these keys: " +
                 "1. \"category\": (String) Classify into [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. " +
                 "2. \"title\": (String) A short summary. " +
-                "3. \"description\": (String) This is a critical field. If the category is \"NOTE\", you MUST paraphrase the content. For ALL other categories, provide a detailed summary. " +
+                "3. \"description\": (String) This is a critical field. If the category is \"NOTE\", you MUST extract and list all the important points from the text. For ALL other categories, provide a detailed summary of all information. " +
                 "4. \"tags\": (String Array) 1-3 relevant, lowercase tags. " +
                 "5. \"amount\": (String) The total value for a BILL or RECEIPT. For others, it MUST be \"N/A\". " +
                 "6. \"reminder\": (Object) A nested object with these keys: " +
@@ -209,8 +209,7 @@ public class ShareActivity extends AppCompatActivity {
                         "For each distinct item you find in the image, create a JSON object with these keys: " +
                         "1. \"category\": (String) Classify into [\"BILL\", \"RECEIPT\", \"TICKET\", \"TASK\", \"NOTE\"]. " +
                         "2. \"title\": (String) A short summary. " +
-                        "3. \"description\": (String) This is a critical field. If the category is \"NOTE\" (like a handwritten list), you MUST paraphrase the content. For ALL other categories, provide a detailed summary of all information. " +
-                        "4. \"tags\": (String Array) 1-3 relevant, lowercase tags. " +
+                        "3. \"description\": (String) This is a critical field. If the category is \"NOTE\", you MUST extract all key points by transcribing important text and describing any significant visual elements (like diagrams or drawings). For all other categories, provide a detailed summary by transcribing all relevant text and numbers from the image. " +                         "4. \"tags\": (String Array) 1-3 relevant, lowercase tags. " +
                         "5. \"amount\": (String) The total value for a BILL or RECEIPT. For others, it MUST be \"N/A\". " +
                         "6. \"reminder\": (Object) A nested object with these keys: " +
                         "- \"is_reminder\": (Boolean) Must be `true` for BILL, TICKET, and TASK. Must be `false` for RECEIPT and NOTE. " +
@@ -284,7 +283,7 @@ public class ShareActivity extends AppCompatActivity {
                     Date date = sdf.parse(dateStr + " " + timeStr);
                     newItem.reminderTime = date.getTime();
                     newItem.isActive = true;
-                    ReminderManager.setReminder(this, newItem.reminderTime, newItem.title, newItem.description);
+                    ReminderManager.setReminder(this, newItem.reminderTime, newItem.title, newItem.description, false);
                 } else if ("RECEIPT".equals(newItem.category) && !"N/A".equals(dateStr)) {
                     // This is an EXPENSE. Save the date for tracking but DO NOT set an alarm.
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
