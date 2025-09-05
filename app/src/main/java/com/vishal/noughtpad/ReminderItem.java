@@ -21,6 +21,7 @@ public class ReminderItem {
     public String category = ""; // e.g., "BILL", "RECEIPT", "NOTE"
 
     public long reminderTime; // The due date in milliseconds, 0 for notes
+    public String embedding;
 
     public boolean isActive; // true if the alarm is set, false if cancelled or it's a note
 }

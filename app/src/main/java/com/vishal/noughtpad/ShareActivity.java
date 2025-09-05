@@ -15,12 +15,12 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 import org.json.JSONArray; // ✅ The missing import
-
+import java.util.ArrayList;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
-
+import java.util.List;
 import com.vishal.noughtpad.databinding.ActivityShareBinding;
 import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.java.GenerativeModelFutures;
@@ -50,6 +50,7 @@ public class ShareActivity extends AppCompatActivity {
     private GenerativeModelFutures generativeModel;
     private ReminderViewModel reminderViewModel;
     private final Executor backgroundExecutor = Executors.newSingleThreadExecutor();
+    private EmbeddingHelper embeddingHelper; // Add this
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,7 @@ public class ShareActivity extends AppCompatActivity {
                 BuildConfig.GEMINI_API_KEY
         );
         generativeModel = GenerativeModelFutures.from(gm);
+        embeddingHelper = new EmbeddingHelper(); // Initialize the helper
 
         reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
         handleIntent(getIntent());
@@ -246,27 +248,31 @@ public class ShareActivity extends AppCompatActivity {
     }
 
     private void processApiResponse(String responseText) {
-        Log.d("GEMINI_RESPONSE", "Full API Response: " + responseText);
-
-        if (responseText == null || !responseText.trim().startsWith("[")) {
-            showError("AI response was not in the expected array format.");
-            finish();
+        Log.d("GEMINI_DEBUG", "RECEIVED RAW RESPONSE: " + responseText);
+        if (responseText == null) {
+            showError("AI returned an empty response.");
             return;
         }
 
-        try {
-            JSONArray jsonArray = new JSONArray(responseText);
-            int itemsSaved = 0;
+        int startIndex = responseText.indexOf("[");
+        int endIndex = responseText.lastIndexOf("]");
+        if (startIndex == -1 || endIndex == -1 || endIndex < startIndex) {
+            showError("Could not find valid JSON in the AI response.");
+            return;
+        }
+        String jsonString = responseText.substring(startIndex, endIndex + 1);
 
-            // Loop through each JSON object in the array
+        try {
+            JSONArray jsonArray = new JSONArray(jsonString);
+            if (jsonArray.length() == 0) {
+                Toast.makeText(this, "No items were found to save.", Toast.LENGTH_LONG).show();
+                finish();
+                return;
+            }
+
+            ArrayList<ReminderItem> itemsToProcess = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject json = jsonArray.getJSONObject(i);
-                String category = json.getString("category");
-                JSONObject reminderObject = json.getJSONObject("reminder");
-                String dateStr = reminderObject.getString("date");
-                String todayDateStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
-
-                // This is the special case where the AI might be wrong
                 ReminderItem newItem = new ReminderItem();
                 newItem.category = json.getString("category");
                 newItem.title = json.getString("title");
@@ -274,61 +280,66 @@ public class ShareActivity extends AppCompatActivity {
                 newItem.tags = json.getJSONArray("tags").toString();
                 newItem.amount = parseAmount(json.getString("amount"));
 
+                JSONObject reminderObject = json.getJSONObject("reminder");
                 boolean isReminder = reminderObject.getBoolean("is_reminder");
+                String dateStr = reminderObject.getString("date");
 
-                // This is the definitive logic for handling dates for all categories
                 if (isReminder && !"N/A".equals(dateStr)) {
-                    // This is a BILL, TICKET, or TASK with a specific date. Set an alarm.
                     String timeStr = reminderObject.getString("time");
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
                     Date date = sdf.parse(dateStr + " " + timeStr);
                     newItem.reminderTime = date.getTime();
                     newItem.isActive = true;
                     ReminderManager.setReminder(this, newItem.reminderTime, newItem.title, newItem.description);
-                } else if ("RECEIPT".equals(newItem.category) && !"N/A".equals(dateStr)) {
-                    // This is an EXPENSE. Save the date for tracking but DO NOT set an alarm.
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-                    Date date = sdf.parse(dateStr);
-                    newItem.reminderTime = date.getTime();
+                } else if ("RECEIPT".equals(newItem.category)) {
+                    if (!"N/A".equals(dateStr)) {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                        Date date = sdf.parse(dateStr);
+                        newItem.reminderTime = date.getTime();
+                    } else {
+                        newItem.reminderTime = System.currentTimeMillis();
+                    }
                     newItem.isActive = false;
                 } else {
-                    // This is a simple NOTE or an item without a valid date.
                     newItem.reminderTime = 0;
                     newItem.isActive = false;
                 }
-
-                // This is the debug logging you requested
-                String readableDate = "N/A";
-                if (newItem.reminderTime > 0) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-                    readableDate = sdf.format(new Date(newItem.reminderTime));
-                }
-                Log.d("ITEM_DEBUG", "--- Item Values Before Saving ---");
-                Log.d("ITEM_DEBUG", "Category: " + newItem.category);
-                Log.d("ITEM_DEBUG", "Title: " + newItem.title);
-                Log.d("ITEM_DEBUG", "Amount: " + newItem.amount);
-                Log.d("ITEM_DEBUG", "isActive: " + newItem.isActive);
-                Log.d("ITEM_DEBUG", "reminderTime (timestamp): " + newItem.reminderTime);
-                Log.d("ITEM_DEBUG", "reminderTime (readable): " + readableDate);
-                Log.d("ITEM_DEBUG", "------------------------------------");
-
-                reminderViewModel.insert(newItem);
-                itemsSaved++;
+                itemsToProcess.add(newItem);
             }
-
-            if (itemsSaved > 0) {
-                Toast.makeText(this, itemsSaved + " item(s) saved!", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "No items were found to save.", Toast.LENGTH_LONG).show();
-            }
+            embedAndSaveItems(itemsToProcess);
 
         } catch (JSONException | ParseException e) {
-            Log.e("JSON_PARSE_ERROR", "Error parsing API response array: " + responseText, e);
+            Log.e("JSON_PARSE_ERROR", "Error parsing extracted JSON: " + jsonString, e);
             showError("Could not parse details from the content.");
-        } finally {
-            finish();
         }
     }
+
+    private void embedAndSaveItems(ArrayList<ReminderItem> items) {
+        if (items.isEmpty()) {
+            Toast.makeText(this, "All items saved!", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        ReminderItem currentItem = items.remove(0);
+        String textToEmbed = currentItem.title + "\n" + currentItem.description;
+
+        embeddingHelper.generateEmbedding(textToEmbed, new EmbeddingHelper.EmbeddingCallback() {
+            @Override
+            public void onEmbeddingGenerated(List<Float> embedding) {
+                currentItem.embedding = EmbeddingHelper.embeddingToString(embedding);
+                reminderViewModel.insert(currentItem);
+                embedAndSaveItems(items); // Process the next item
+            }
+            @Override
+            public void onError(Throwable t) {
+                Log.e("EMBEDDING_ERROR", "Could not generate embedding for '" + currentItem.title + "', saving without it.", t);
+                reminderViewModel.insert(currentItem); // Save without embedding on error
+                embedAndSaveItems(items); // Process the next item
+            }
+        });
+    }
+
 
     private Bitmap scaleBitmap(Bitmap originalBitmap) {
         int originalWidth = originalBitmap.getWidth();

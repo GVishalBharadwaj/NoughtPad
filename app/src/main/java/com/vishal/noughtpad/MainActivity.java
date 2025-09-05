@@ -156,6 +156,11 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         }
+        if (item.getItemId() == R.id.action_qa) { // Add a new ID for this in your main_menu.xml
+            Intent intent = new Intent(this, QaActivity.class);
+            startActivity(intent);
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 }
