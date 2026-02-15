@@ -68,12 +68,17 @@ public class MainActivity extends AppCompatActivity {
         new TabLayoutMediator(binding.tabLayout, binding.viewPager,
                 (tab, position) -> {
                     switch (position) {
-                        case 0: tab.setText("Reminders"); break;
-                        case 1: tab.setText("Notes"); break;
-                        case 2: tab.setText("Expenses"); break;
+                        case 0:
+                            tab.setText("Reminders");
+                            break;
+                        case 1:
+                            tab.setText("Notes");
+                            break;
+                        case 2:
+                            tab.setText("Expenses");
+                            break;
                     }
-                }
-        ).attach();
+                }).attach();
     }
 
     private void setupFab() {
@@ -97,35 +102,52 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.fabUploadImage.setOnClickListener(v -> openGallery());
-        binding.fabCamera.setOnClickListener(v -> openCamera());
         binding.fabTextNote.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+            startActivity(intent);
+        });
+
+        // NEW: Add listener for Scan & Pay (using camera icon for now, or add a new
+        // one)
+        // For this iteration, I'll repurpose the "Camera" FAB to open QR Scanner
+        // instead of just taking a photo
+        // Or better, add a new logic.
+        // Let's make 'fabCamera' open the QR Scanner Activity
+        binding.fabCamera.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, QRScannerActivity.class);
             startActivity(intent);
         });
     }
 
     private void setupResultLaunchers() {
         galleryLauncher = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
-            if (uri != null) startShareActivityWithImage(uri);
+            if (uri != null)
+                startShareActivityWithImage(uri);
         });
         cameraLauncher = registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
-            if (success) startShareActivityWithImage(tempImageUri);
+            if (success)
+                startShareActivityWithImage(tempImageUri);
         });
-        requestCameraPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-            if (isGranted) openCamera();
-            else Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show();
-        });
+        requestCameraPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted)
+                        openCamera();
+                    else
+                        Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void openGallery() {
-        galleryLauncher.launch(new PickVisualMediaRequest.Builder().setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build());
+        galleryLauncher.launch(new PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build());
     }
 
     private void openCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             try {
                 File imageFile = File.createTempFile("temp_photo", ".jpg", getCacheDir());
-                tempImageUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", imageFile);
+                tempImageUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider",
+                        imageFile);
                 cameraLauncher.launch(tempImageUri);
             } catch (IOException e) {
                 Toast.makeText(this, "Could not create image file", Toast.LENGTH_SHORT).show();
@@ -143,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivity(intent);
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);

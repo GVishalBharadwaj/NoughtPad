@@ -91,6 +91,41 @@ public class DetailActivity extends AppCompatActivity {
             binding.buttonDelete.setVisibility(View.GONE);
             binding.chipMarkExpense.setVisibility(View.VISIBLE); // Show "Mark as Expense" in create mode
             binding.chipRemoveReminder.setVisibility(View.GONE);
+
+            // Handle extras from QR Scanner
+            Intent intentExtras = getIntent();
+            if (intentExtras.hasExtra("EXTRA_CATEGORY")) {
+                String category = intentExtras.getStringExtra("EXTRA_CATEGORY");
+                if ("RECEIPT".equals(category)) {
+                    // Pre-select Receipt/Expense mode
+                    binding.chipMarkExpense.performClick();
+                }
+            }
+
+            // Pre-fill data if available (e.g., from QR Scanner)
+            if (intentExtras.hasExtra("EXTRA_TITLE")) {
+                binding.editTextTitle.setText(intentExtras.getStringExtra("EXTRA_TITLE"));
+            }
+
+            String desc = "";
+            if (intentExtras.hasExtra("EXTRA_DESCRIPTION")) {
+                desc = intentExtras.getStringExtra("EXTRA_DESCRIPTION");
+            }
+
+            // Append amount to description FIRST for regex visibility
+            if (intentExtras.hasExtra("EXTRA_AMOUNT")) {
+                String amount = intentExtras.getStringExtra("EXTRA_AMOUNT");
+                desc = "Amount: " + amount + "\n" + desc;
+            }
+
+            // Map MCC to Tag/Category
+            if (intentExtras.hasExtra("EXTRA_MCC")) {
+                String mcc = intentExtras.getStringExtra("EXTRA_MCC");
+                String mccCategory = getCategoryFromMcc(mcc);
+                desc += "\nCategory: " + mccCategory;
+            }
+
+            binding.editTextDescription.setText(desc);
         }
 
         binding.buttonSave.setOnClickListener(v -> saveItemManually()); // For Notes and Reminders
@@ -148,6 +183,7 @@ public class DetailActivity extends AppCompatActivity {
             saveAsExpense(expenseCalendar.getTimeInMillis());
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
     }
+
     private void populateUI(ReminderItem item) {
         binding.editTextTitle.setText(item.title);
         binding.editTextDescription.setText(item.description);
@@ -189,27 +225,33 @@ public class DetailActivity extends AppCompatActivity {
         progressDialog.show();
 
         String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
-        String textPromptTemplate = "Your SOLE TASK is to analyze the content and respond ONLY with a valid JSON array that conforms to the following schema. The current date is %s. " +
-                "Do not include any extra text, explanations, or markdown. Your response must be a raw JSON array starting with [ and ending with ].\n\n" +
+        String textPromptTemplate = "Your SOLE TASK is to analyze the content and respond ONLY with a valid JSON array that conforms to the following schema. The current date is %s. "
+                +
+                "Do not include any extra text, explanations, or markdown. Your response must be a raw JSON array starting with [ and ending with ].\n\n"
+                +
                 "**JSON Schema:**\n" +
                 "[\n" +
                 "  {\n" +
                 "    \"category\": \"(String) One of: BILL, RECEIPT, TICKET, TASK, NOTE\",\n" +
                 "    \"title\": \"(String) A short summary of the item.\",\n" +
-                "    \"description\": \"(String) A detailed summary. If the category is 'NOTE', paraphrase the original content.\",\n" +
+                "    \"description\": \"(String) A detailed summary. If the category is 'NOTE', paraphrase the original content.\",\n"
+                +
                 "    \"tags\": \"(String Array) 1-3 relevant, lowercase tags.\",\n" +
                 "    \"amount\": \"(String) The monetary value for a BILL or RECEIPT. For all others, use 'N/A'.\",\n" +
                 "    \"reminder\": {\n" +
                 "      \"is_reminder\": \"(Boolean) true for BILL, TICKET, TASK. false for others.\",\n" +
-                "      \"date\": \"(String) Date in YYYY-MM-DD format. For a RECEIPT with no date, use the current date (%s). For others with no date, use 'N/A'.\",\n" +
-                "      \"time\": \"(String) Time in HH:mm format. Default to '09:00' if a date exists but no time is found. Use 'N/A' if no date.\"\n" +
+                "      \"date\": \"(String) Date in YYYY-MM-DD format. For a RECEIPT with no date, use the current date (%s). For others with no date, use 'N/A'.\",\n"
+                +
+                "      \"time\": \"(String) Time in HH:mm format. Default to '09:00' if a date exists but no time is found. Use 'N/A' if no date.\"\n"
+                +
                 "    }\n" +
                 "  }\n" +
                 "]";
 
         String finalPrompt = String.format(textPromptTemplate, currentDate, currentDate);
 
-        Content content = new Content.Builder().addText(finalPrompt + "\n\nHere is the text to analyze:\n" + combinedText).build();
+        Content content = new Content.Builder()
+                .addText(finalPrompt + "\n\nHere is the text to analyze:\n" + combinedText).build();
 
         // START: New Logging
         String exampleJson = "[{\"category\":\"...\",\"title\":\"...\",\"description\":\"...\",\"tags\":[\"...\"],\"amount\":\"...\",\"reminder\":{...}}]";
@@ -236,11 +278,13 @@ public class DetailActivity extends AppCompatActivity {
                 Log.e("AI_FAILURE", "Full API Error: ", t);
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
-                    Toast.makeText(DetailActivity.this, "AI analysis failed: " + t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(DetailActivity.this, "AI analysis failed: " + t.getLocalizedMessage(),
+                            Toast.LENGTH_LONG).show();
                 });
             }
         }, backgroundExecutor);
     }
+
     // Use this method in BOTH ShareActivity.java and DetailActivity.java
     private void processAndSaveAiResponse(String responseText) {
         Log.d("AI_DEBUG", "RECEIVED RAW RESPONSE: " + responseText);
@@ -332,7 +376,8 @@ public class DetailActivity extends AppCompatActivity {
             return;
         }
 
-        final ReminderItem itemToSave = isEditMode ? currentItem : (currentItem != null ? currentItem : new ReminderItem());
+        final ReminderItem itemToSave = isEditMode ? currentItem
+                : (currentItem != null ? currentItem : new ReminderItem());
         if (!isEditMode && !"RECEIPT".equals(itemToSave.category)) {
             itemToSave.category = "NOTE";
         }
@@ -345,7 +390,8 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         if (isReminderSet) {
-            if (!"BILL".equals(itemToSave.category) && !"TICKET".equals(itemToSave.category) && !"RECEIPT".equals(itemToSave.category)) {
+            if (!"BILL".equals(itemToSave.category) && !"TICKET".equals(itemToSave.category)
+                    && !"RECEIPT".equals(itemToSave.category)) {
                 itemToSave.category = "TASK";
             }
             itemToSave.reminderTime = reminderCalendar.getTimeInMillis();
@@ -356,8 +402,7 @@ public class DetailActivity extends AppCompatActivity {
             if ("RECEIPT".equals(itemToSave.category)) {
                 String combinedText = itemToSave.title + " " + itemToSave.description;
                 itemToSave.amount = extractAmountFromText(combinedText);
-            }
-            else {
+            } else {
                 itemToSave.category = "NOTE";
                 itemToSave.reminderTime = 0;
             }
@@ -372,6 +417,7 @@ public class DetailActivity extends AppCompatActivity {
         }
         finish();
     }
+
     private void removeReminder() {
         isReminderSet = false;
         binding.reminderDetailsLayout.setVisibility(View.GONE);
@@ -406,7 +452,8 @@ public class DetailActivity extends AppCompatActivity {
             reminderCalendar.set(Calendar.MONTH, month);
             reminderCalendar.set(Calendar.DAY_OF_MONTH, day);
             showTimePickerDialog();
-        }, reminderCalendar.get(Calendar.YEAR), reminderCalendar.get(Calendar.MONTH), reminderCalendar.get(Calendar.DAY_OF_MONTH)).show();
+        }, reminderCalendar.get(Calendar.YEAR), reminderCalendar.get(Calendar.MONTH),
+                reminderCalendar.get(Calendar.DAY_OF_MONTH)).show();
     }
 
     private void showTimePickerDialog() {
@@ -434,6 +481,7 @@ public class DetailActivity extends AppCompatActivity {
             new android.os.Handler(getMainLooper()).postDelayed(this::finish, 3000);
         }
     }
+
     private long getStartOfDay() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -452,6 +500,7 @@ public class DetailActivity extends AppCompatActivity {
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTimeInMillis();
     }
+
     private void setDate(long timeInMillis) {
         if (reminderCalendar == null) {
             reminderCalendar = Calendar.getInstance();
@@ -472,6 +521,7 @@ public class DetailActivity extends AppCompatActivity {
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTimeInMillis();
     }
+
     private double parseAmount(String amountStr) {
         if (amountStr == null || amountStr.equalsIgnoreCase("N/A")) {
             return 0.0;
@@ -484,18 +534,21 @@ public class DetailActivity extends AppCompatActivity {
                     .replace("₹", "")
                     .replaceAll(",", "")
                     .trim();
-            if (cleanStr.isEmpty()) return 0.0;
+            if (cleanStr.isEmpty())
+                return 0.0;
             return Double.parseDouble(cleanStr);
         } catch (NumberFormatException e) {
             return 0.0;
         }
     }
+
     private double extractAmountFromText(String text) {
         if (text == null || text.isEmpty()) {
             return 0.0;
         }
         try {
-            // This regular expression finds the first sequence of digits, allowing for a decimal point.
+            // This regular expression finds the first sequence of digits, allowing for a
+            // decimal point.
             java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d+\\.?\\d*|\\.\\d+)");
             java.util.regex.Matcher matcher = pattern.matcher(text);
             if (matcher.find()) {
@@ -506,6 +559,29 @@ public class DetailActivity extends AppCompatActivity {
             return 0.0;
         }
         return 0.0;
+    }
+
+    private String getCategoryFromMcc(String mcc) {
+        if (mcc == null)
+            return "General";
+        try {
+            int code = Integer.parseInt(mcc);
+            if (code >= 5400 && code <= 5499)
+                return "Groceries";
+            if (code >= 5811 && code <= 5814)
+                return "Food & Dining";
+            if (code >= 5541 && code <= 5542)
+                return "Fuel";
+            if (code >= 4111 && code <= 4131)
+                return "Transport";
+            if (code >= 4812 && code <= 4899)
+                return "Utilities";
+            if (code >= 5600 && code <= 5699)
+                return "Clothing";
+            return "General (" + mcc + ")";
+        } catch (NumberFormatException e) {
+            return "General";
+        }
     }
 
 }

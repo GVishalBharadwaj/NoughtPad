@@ -31,4 +31,7 @@ public interface ReminderDao {
 
     @Query("SELECT * FROM reminder_items WHERE category IN (:categories) ORDER BY id DESC")
     LiveData<List<ReminderItem>> getItemsByCategories(String[] categories);
+
+    @Query("SELECT * FROM reminder_items")
+    List<ReminderItem> getAllItemsSync();
 }
