@@ -34,4 +34,7 @@ public interface ReminderDao {
 
     @Query("SELECT * FROM reminder_items")
     List<ReminderItem> getAllItemsSync();
+
+    @Query("SELECT COUNT(*) FROM reminder_items WHERE amount = :amount AND title = :title AND reminderTime > :startTime")
+    int checkForDuplicate(double amount, String title, long startTime);
 }

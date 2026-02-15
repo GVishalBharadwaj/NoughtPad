@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     implementation(libs.preference)
+    implementation(libs.mpandroidchart)
     ksp(libs.room.compiler)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.lifecycle.livedata)

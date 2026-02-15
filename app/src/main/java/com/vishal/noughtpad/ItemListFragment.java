@@ -43,7 +43,8 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         boolean isExpenseTab = categoriesToShow != null && categoriesToShow.contains("RECEIPT");
         if (isExpenseTab) {
             return inflater.inflate(R.layout.fragment_expense_list, container, false);
@@ -66,13 +67,15 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
 
         // This single observer is our "source of truth" for all UI updates
         reminderViewModel.getAllItems().observe(getViewLifecycleOwner(), allItems -> {
-            if (allItems == null) return;
+            if (allItems == null)
+                return;
 
             // --- 1. Filter the list for the RecyclerView ---
             List<ReminderItem> filteredList = new ArrayList<>();
             if (categoriesToShow.contains("ALL_REMINDERS")) {
                 for (ReminderItem item : allItems) {
-                    if ("BILL".equals(item.category) || "TICKET".equals(item.category) || "TASK".equals(item.category)) {
+                    if ("BILL".equals(item.category) || "TICKET".equals(item.category)
+                            || "TASK".equals(item.category)) {
                         filteredList.add(item);
                     }
                 }
@@ -99,6 +102,7 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
         final TextView tvWeek = view.findViewById(R.id.text_total_week);
         final TextView tvMonth = view.findViewById(R.id.text_total_month);
         final TextView tvAllTime = view.findViewById(R.id.text_total_all_time);
+        final com.github.mikephil.charting.charts.PieChart pieChart = view.findViewById(R.id.pieChart);
 
         double totalToday = 0;
         double totalWeek = 0;
@@ -109,12 +113,35 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
         long startOfWeek = getStartOfWeek();
         long startOfMonth = getStartOfMonth();
 
+        // Aggregation for Chart
+        java.util.Map<String, Double> categoryTotals = new java.util.HashMap<>();
+
         for (ReminderItem item : allItems) {
             if ("RECEIPT".equals(item.category)) {
-                totalAllTime += item.amount;
-                if (item.reminderTime >= startOfDay) totalToday += item.amount;
-                if (item.reminderTime >= startOfWeek) totalWeek += item.amount;
-                if (item.reminderTime >= startOfMonth) totalMonth += item.amount;
+                double amt = item.amount;
+                totalAllTime += amt;
+                if (item.reminderTime >= startOfDay)
+                    totalToday += amt;
+                if (item.reminderTime >= startOfWeek)
+                    totalWeek += amt;
+                if (item.reminderTime >= startOfMonth)
+                    totalMonth += amt;
+
+                // Parse tags/categories for the chart (e.g., "Groceries", "Food")
+                // If details contain "Category: X", extract X. Or use item.title?
+                // Let's rely on simple extraction from description if available, or just
+                // "Uncategorized"
+                String cat = "Misc";
+                if (item.description.contains("Category:")) {
+                    String[] parts = item.description.split("Category:");
+                    if (parts.length > 1) {
+                        cat = parts[1].trim().split("\n")[0];
+                    }
+                } else if (item.tags != null && !item.tags.isEmpty()) {
+                    cat = item.tags.split(",")[0];
+                }
+
+                categoryTotals.put(cat, categoryTotals.getOrDefault(cat, 0.0) + amt);
             }
         }
 
@@ -123,24 +150,75 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
         tvWeek.setText(currencyFormat.format(totalWeek));
         tvMonth.setText(currencyFormat.format(totalMonth));
         tvAllTime.setText(currencyFormat.format(totalAllTime));
+
+        // Update Chart
+        if (pieChart != null) {
+            setupPieChart(pieChart, categoryTotals, totalAllTime);
+        }
+    }
+
+    private void setupPieChart(com.github.mikephil.charting.charts.PieChart chart,
+            java.util.Map<String, Double> dataMap, double total) {
+        java.util.List<com.github.mikephil.charting.data.PieEntry> entries = new ArrayList<>();
+        for (java.util.Map.Entry<String, Double> entry : dataMap.entrySet()) {
+            entries.add(new com.github.mikephil.charting.data.PieEntry(entry.getValue().floatValue(), entry.getKey()));
+        }
+
+        com.github.mikephil.charting.data.PieDataSet dataSet = new com.github.mikephil.charting.data.PieDataSet(entries,
+                "Expenses");
+
+        // Colors
+        java.util.List<Integer> colors = new ArrayList<>();
+        int[] MATERIAL_COLORS = {
+                android.graphics.Color.rgb(46, 204, 113), android.graphics.Color.rgb(52, 152, 219),
+                android.graphics.Color.rgb(241, 196, 15), android.graphics.Color.rgb(231, 76, 60),
+                android.graphics.Color.rgb(155, 89, 182), android.graphics.Color.rgb(52, 73, 94)
+        };
+        for (int c : MATERIAL_COLORS)
+            colors.add(c);
+        dataSet.setColors(colors);
+
+        com.github.mikephil.charting.data.PieData data = new com.github.mikephil.charting.data.PieData(dataSet);
+        data.setValueTextSize(12f);
+        data.setValueTextColor(android.graphics.Color.WHITE);
+
+        chart.setData(data);
+        chart.setCenterText("Total\n₹" + (int) total);
+        chart.setCenterTextSize(16f);
+        chart.getDescription().setEnabled(false);
+        chart.setHoleRadius(40f);
+        chart.setTransparentCircleRadius(45f);
+        chart.animateY(1000);
+        chart.invalidate();
     }
 
     // --- Helper methods to get timestamps ---
     private long getStartOfDay() {
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0); calendar.set(Calendar.SECOND, 0); calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTimeInMillis();
     }
+
     private long getStartOfWeek() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
-        calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0); calendar.set(Calendar.SECOND, 0); calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTimeInMillis();
     }
+
     private long getStartOfMonth() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_MONTH, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0); calendar.set(Calendar.SECOND, 0); calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTimeInMillis();
     }
 

@@ -60,6 +60,27 @@ public class MainActivity extends AppCompatActivity {
         setupTabs();
         setupResultLaunchers();
         setupFab();
+        checkNotificationPermission();
+    }
+
+    private void checkNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            String enabledListeners = android.provider.Settings.Secure.getString(getContentResolver(),
+                    "enabled_notification_listeners");
+            boolean isEnabled = enabledListeners != null && enabledListeners.contains(getPackageName());
+
+            if (!isEnabled) {
+                new androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("Enable Auto-Tracking")
+                        .setMessage(
+                                "To automatically track expenses from SMS/Bank notifications, NoughtPad needs 'Notification Access'. This is safe and private.")
+                        .setPositiveButton("Enable", (dialog, which) -> {
+                            startActivity(new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+                        })
+                        .setNegativeButton("Later", null)
+                        .show();
+            }
+        }
     }
 
     private void setupTabs() {

@@ -216,45 +216,69 @@ public class QRScannerActivity extends AppCompatActivity {
         lastAmount = upiUri.getQueryParameter("am");
         lastMcc = upiUri.getQueryParameter("mc");
 
-        if (lastAmount == null || lastAmount.isEmpty()) {
-            showAmountDialog(lastPayeeName, lastPayeeVpa, upiUriString);
-        } else {
-            launchUpiPayment(upiUri);
-        }
+        // Always show the dialog to give the user a choice (Pay vs Record)
+        showTransactionDialog(lastPayeeName, lastPayeeVpa, upiUriString);
     }
 
-    private void showAmountDialog(String name, String vpa, String originalUri) {
-        // Use a custom layout or styled dialog if possible, but for now improve the
-        // text
+    private void showTransactionDialog(String name, String vpa, String originalUri) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Enter Amount");
+        builder.setTitle("Transaction Details");
 
         String payeeDisplay = (name != null && !name.isEmpty()) ? name : vpa;
-        builder.setMessage("Paying to: " + payeeDisplay + "\n\n(No amount specified in QR code)");
+        builder.setMessage("Payee: " + payeeDisplay);
 
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         input.setHint("0.00");
+
+        // Pre-fill amount if present
+        if (lastAmount != null && !lastAmount.isEmpty()) {
+            input.setText(lastAmount);
+        }
 
         // Add padding to EditText
         int padding = (int) (16 * getResources().getDisplayMetrics().density);
         input.setPadding(padding, padding, padding, padding);
         builder.setView(input);
 
-        builder.setPositiveButton("Pay Now", (dialog, which) -> {
+        builder.setPositiveButton("Pay via UPI", (dialog, which) -> {
             String amountStr = input.getText().toString();
             if (!amountStr.isEmpty()) {
                 lastAmount = amountStr;
-                // Append amount and default currency if missing
-                String newUriString = originalUri + "&am=" + amountStr + "&cu=INR";
-                launchUpiPayment(Uri.parse(newUriString));
+
+                // Use Uri.Builder for robust parameter appending
+                Uri.Builder uriBuilder = Uri.parse(originalUri).buildUpon();
+                // Clear existing amount param to avoid duplicates if we are overriding
+                uriBuilder.clearQuery();
+                // Re-add all original params except 'am'
+                Uri original = Uri.parse(originalUri);
+                for (String key : original.getQueryParameterNames()) {
+                    if (!"am".equals(key)) {
+                        uriBuilder.appendQueryParameter(key, original.getQueryParameter(key));
+                    }
+                }
+
+                uriBuilder.appendQueryParameter("am", amountStr);
+
+                if (original.getQueryParameter("cu") == null) {
+                    uriBuilder.appendQueryParameter("cu", "INR");
+                }
+                uriBuilder.appendQueryParameter("refUrl", "https://github.com/GVishalBharadwaj/NoughtPad");
+
+                launchUpiPayment(uriBuilder.build());
             } else {
-                Toast.makeText(this, "Amount is required", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Amount is required to pay", Toast.LENGTH_SHORT).show();
                 isScanning = true;
             }
         });
 
-        builder.setNegativeButton("Cancel / Re-scan", (dialog, which) -> {
+        builder.setNeutralButton("Save Record Only", (dialog, which) -> {
+            String amountStr = input.getText().toString();
+            lastAmount = !amountStr.isEmpty() ? amountStr : "0.00";
+            proceedToSaveRecord();
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
             isScanning = true;
             dialog.cancel();
         });
@@ -265,8 +289,28 @@ public class QRScannerActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
 
-        // Focus and show keyboard
-        input.requestFocus();
+        // Focus if amount is missing
+        if (lastAmount == null || lastAmount.isEmpty()) {
+            input.requestFocus();
+        }
+    }
+
+    private void proceedToSaveRecord() {
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra("EXTRA_CATEGORY", "RECEIPT");
+
+        // Pass captured details
+        if (lastPayeeName != null)
+            intent.putExtra("EXTRA_TITLE", lastPayeeName);
+        if (lastPayeeVpa != null)
+            intent.putExtra("EXTRA_DESCRIPTION", "Paid to: " + lastPayeeVpa);
+        if (lastAmount != null)
+            intent.putExtra("EXTRA_AMOUNT", lastAmount);
+        if (lastMcc != null)
+            intent.putExtra("EXTRA_MCC", lastMcc);
+
+        startActivity(intent);
+        finish();
     }
 
     private void launchUpiPayment(Uri uri) {
@@ -274,9 +318,9 @@ public class QRScannerActivity extends AppCompatActivity {
         intent.setData(uri);
         Intent chooser = Intent.createChooser(intent, "Pay with");
 
-        if (intent.resolveActivity(getPackageManager()) != null) {
+        try {
             startActivityForResult(chooser, PAYMENT_REQUEST_CODE);
-        } else {
+        } catch (android.content.ActivityNotFoundException e) {
             Toast.makeText(this, "No UPI app found", Toast.LENGTH_SHORT).show();
             isScanning = true;
         }
