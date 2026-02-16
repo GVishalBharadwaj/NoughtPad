@@ -1,5 +1,6 @@
 package com.vishal.noughtpad;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,11 +10,15 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.ReminderViewHolder> {
+public class ReminderAdapter extends ListAdapter<ReminderItem, RecyclerView.ViewHolder> {
+
+    private static final int TYPE_REMINDER = 0;
+    private static final int TYPE_TRANSACTION = 1;
 
     private OnItemClickListener listener;
 
@@ -29,29 +34,93 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.R
         super(DIFF_CALLBACK);
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        ReminderItem item = getItem(position);
+        if ("RECEIPT".equals(item.category)) {
+            return TYPE_TRANSACTION;
+        }
+        return TYPE_REMINDER;
+    }
+
     @NonNull
     @Override
-    public ReminderViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.list_item_reminder, parent, false);
-        return new ReminderViewHolder(itemView);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == TYPE_TRANSACTION) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_transaction, parent, false);
+            return new TransactionViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.list_item_reminder, parent, false);
+            return new ReminderViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ReminderViewHolder holder, int position) {
-        ReminderItem currentItem = getItem(position);
-        holder.titleTextView.setText(currentItem.title);
-        holder.descriptionTextView.setText(currentItem.description);
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        ReminderItem item = getItem(position);
+        if (holder instanceof TransactionViewHolder) {
+            ((TransactionViewHolder) holder).bind(item);
+        } else if (holder instanceof ReminderViewHolder) {
+            ((ReminderViewHolder) holder).bind(item);
+        }
+    }
 
-        if (currentItem.isActive && currentItem.reminderTime > 0) {
-            holder.iconImageView.setImageResource(R.drawable.ic_reminder);
-            holder.dueDateTextView.setVisibility(View.VISIBLE);
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault());
-            String formattedDate = sdf.format(new Date(currentItem.reminderTime));
-            holder.dueDateTextView.setText("Due: " + formattedDate);
-        } else {
-            holder.iconImageView.setImageResource(R.drawable.ic_note);
-            holder.dueDateTextView.setVisibility(View.GONE);
+    class TransactionViewHolder extends RecyclerView.ViewHolder {
+        private final TextView title, date, amount, category;
+        private final ImageView icon;
+
+        TransactionViewHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.trans_title);
+            date = itemView.findViewById(R.id.trans_date);
+            amount = itemView.findViewById(R.id.trans_amount);
+            category = itemView.findViewById(R.id.trans_category);
+            icon = itemView.findViewById(R.id.trans_icon);
+
+            itemView.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (listener != null && position != RecyclerView.NO_POSITION) {
+                    listener.onItemClick(getItem(position));
+                }
+            });
+        }
+
+        void bind(ReminderItem item) {
+            title.setText(item.title.isEmpty() ? "Unknown Vendor" : item.title);
+
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault());
+            date.setText(item.reminderTime > 0 ? sdf.format(new Date(item.reminderTime)) : "No Date");
+
+            NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("en", "IN"));
+            String amountText = format.format(item.amount);
+
+            // Check if it's Income or Expense (Logic: Income items might have a negative
+            // amount stored or a flag?
+            // For now, let's assume raw amount is positive. We need a way to know if it's
+            // Credit.
+            // Let's use 'type' field? If type == "income" -> Green. Else Red.
+            boolean isIncome = "income".equalsIgnoreCase(item.type);
+
+            if (isIncome) {
+                amount.setText("+ " + amountText);
+                amount.setTextColor(Color.parseColor("#388E3C")); // Green
+            } else {
+                amount.setText("- " + amountText);
+                amount.setTextColor(Color.parseColor("#D32F2F")); // Red
+            }
+
+            // Category tag
+            String cat = "Misc";
+            if (item.description.contains("Category:")) {
+                String[] parts = item.description.split("Category:");
+                if (parts.length > 1)
+                    cat = parts[1].trim().split("\n")[0];
+            } else if (item.tags != null && !item.tags.isEmpty()) {
+                cat = item.tags.split(",")[0];
+            }
+            category.setText(cat);
         }
     }
 
@@ -64,7 +133,6 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.R
         public ReminderViewHolder(@NonNull View itemView) {
             super(itemView);
             iconImageView = itemView.findViewById(R.id.item_icon);
-            // ✅ This now correctly references the new IDs
             titleTextView = itemView.findViewById(R.id.item_title);
             descriptionTextView = itemView.findViewById(R.id.item_description);
             dueDateTextView = itemView.findViewById(R.id.item_due_date);
@@ -75,6 +143,22 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.R
                     listener.onItemClick(getItem(position));
                 }
             });
+        }
+
+        void bind(ReminderItem currentItem) {
+            titleTextView.setText(currentItem.title);
+            descriptionTextView.setText(currentItem.description);
+
+            if (currentItem.isActive && currentItem.reminderTime > 0) {
+                iconImageView.setImageResource(R.drawable.ic_reminder);
+                dueDateTextView.setVisibility(View.VISIBLE);
+                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault());
+                String formattedDate = sdf.format(new Date(currentItem.reminderTime));
+                dueDateTextView.setText("Due: " + formattedDate);
+            } else {
+                iconImageView.setImageResource(R.drawable.ic_note);
+                dueDateTextView.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -89,7 +173,9 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, ReminderAdapter.R
             return oldItem.title.equals(newItem.title) &&
                     oldItem.description.equals(newItem.description) &&
                     oldItem.reminderTime == newItem.reminderTime &&
-                    oldItem.isActive == newItem.isActive;
+                    oldItem.isActive == newItem.isActive &&
+                    oldItem.amount == newItem.amount &&
+                    oldItem.category.equals(newItem.category);
         }
     };
 }

@@ -27,13 +27,7 @@ public class ExpensesWidgetProvider extends AppWidgetProvider {
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_expenses);
 
-        // 1. Set up the "Scan & Pay" button pending intent
-        Intent scanIntent = new Intent(context, QRScannerActivity.class);
-        PendingIntent scanPendingIntent = PendingIntent.getActivity(context, 0, scanIntent,
-                PendingIntent.FLAG_IMMUTABLE);
-        views.setOnClickPendingIntent(R.id.widget_button_scan, scanPendingIntent);
-
-        // Also make the whole widget open MainActivity on click (optional, but good UX)
+        // 1. Set up the intent that launches the MainActivity when clicked
         Intent mainIntent = new Intent(context, MainActivity.class);
         PendingIntent mainPendingIntent = PendingIntent.getActivity(context, 0, mainIntent,
                 PendingIntent.FLAG_IMMUTABLE);

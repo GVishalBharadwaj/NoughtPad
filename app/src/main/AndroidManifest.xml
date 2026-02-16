@@ -14,20 +14,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
 
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="upi" />
-        </intent>
-        <package android:name="com.google.android.apps.nbu.paisa.user" /> <!-- GPay -->
-        <package android:name="com.phonepe.app" /> <!-- PhonePe -->
-        <package android:name="net.one97.paytm" /> <!-- Paytm -->
-        <package android:name="in.org.npci.upiapp" /> <!-- BHIM -->
-        <package android:name="in.indwealth" /> <!-- INDmoney -->
-        <package android:name="money.super.payments" /> <!-- Super.money -->
-        <package android:name="com.dreamplug.androidapp" /> <!-- CRED -->
-        <package android:name="in.amazon.mShop.android.shopping" /> <!-- Amazon Pay -->
-    </queries>
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
 
     <application
         android:allowBackup="true"
@@ -91,12 +78,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".QRScannerActivity"
-            android:exported="false"
-            android:label="Scan &amp; Pay"
-            android:theme="@style/Theme.Material3.DayNight.NoActionBar" />
-
 
         <receiver
             android:name=".ReminderBroadcastReceiver"
@@ -123,10 +104,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/expenses_widget_info" />
         </receiver>
-
-        <meta-data
-            android:name="com.google.mlkit.vision.DEPENDENCIES"
-            android:value="barcode" />
 
     </application>
 </manifest>

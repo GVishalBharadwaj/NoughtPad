@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="md_theme_primary">#006A6A</color>
+    <!-- Financial Theme Palette -->
+    <color name="md_theme_primary">#009688</color> <!-- Teal 500 -->
     <color name="md_theme_onPrimary">#FFFFFF</color>
-    <color name="md_theme_primaryContainer">#70F7F6</color>
-    <color name="md_theme_onPrimaryContainer">#002020</color>
+    <color name="md_theme_primaryContainer">#B2DFDB</color>
+    <color name="md_theme_onPrimaryContainer">#004D40</color>
 
-    <color name="md_theme_secondary">#4A6363</color>
+    <color name="md_theme_secondary">#455A64</color> <!-- Blue Grey -->
     <color name="md_theme_onSecondary">#FFFFFF</color>
-    <color name="md_theme_secondaryContainer">#CDE8E7</color>
-    <color name="md_theme_onSecondaryContainer">#051F1F</color>
+    <color name="md_theme_secondaryContainer">#CFD8DC</color>
+    <color name="md_theme_onSecondaryContainer">#263238</color>
 
-    <color name="md_theme_background">#FAFDFC</color>
-    <color name="md_theme_onBackground">#191C1C</color>
-    <color name="md_theme_surface">#FAFDFC</color>
-    <color name="md_theme_onSurface">#191C1C</color>
+    <color name="md_theme_background">#FAFAFA</color> <!-- Light Grey BG (Better than F5F5F5) -->
+    <color name="md_theme_onBackground">#212121</color>
+    <color name="md_theme_surface">#FFFFFF</color>
+    <color name="md_theme_onSurface">#212121</color>
+    
+    <color name="colorExpense">#D32F2F</color> <!-- Red 700 -->
+    <color name="colorIncome">#388E3C</color> <!-- Green 700 -->
+    <color name="colorTextSecondary">#616161</color> <!-- Darker Grey for better contrast -->
 </resources>

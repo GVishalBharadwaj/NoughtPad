@@ -37,4 +37,7 @@ public interface ReminderDao {
 
     @Query("SELECT COUNT(*) FROM reminder_items WHERE amount = :amount AND title = :title AND reminderTime > :startTime")
     int checkForDuplicate(double amount, String title, long startTime);
+
+    @Query("SELECT category FROM reminder_items WHERE title = :title ORDER BY id DESC LIMIT 1")
+    String getLastCategory(String title);
 }

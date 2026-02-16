@@ -99,7 +99,10 @@ public class DetailActivity extends AppCompatActivity {
                 if ("RECEIPT".equals(category)) {
                     // Pre-select Receipt/Expense mode
                     binding.chipMarkExpense.performClick();
+                    binding.categoryInputLayout.setVisibility(View.VISIBLE); // Explicitly show
                 }
+            } else {
+                binding.categoryInputLayout.setVisibility(View.GONE); // Hidden by default
             }
 
             // Pre-fill data if available (e.g., from QR Scanner)
@@ -140,17 +143,41 @@ public class DetailActivity extends AppCompatActivity {
         binding.chipMarkExpense.setOnClickListener(v -> {
             binding.expenseDateLayout.setVisibility(View.VISIBLE);
             binding.chipMarkExpense.setVisibility(View.GONE); // Hide the original chip
+            binding.categoryInputLayout.setVisibility(View.VISIBLE); // Show category
+            binding.buttonSmartAnalyze.setVisibility(View.GONE); // Hide AI
         });
 
         // These listeners are ONLY for setting and saving an expense
-        binding.chipToday.setOnClickListener(v -> saveAsExpense(getStartOfDay()));
         binding.chipYesterday.setOnClickListener(v -> saveAsExpense(getYesterday()));
         binding.chipCustomExpenseDate.setOnClickListener(v -> showExpenseDatePicker());
+
+        setupCategoryDropdown();
+    }
+
+    private void setupCategoryDropdown() {
+        String[] categories = new String[] {
+                "Food & Dining", "Groceries", "Transport", "Utilities", "Shopping",
+                "Health", "Education", "Entertainment", "Personal Care", "Bills",
+                "Fuel", "Travel", "Salary", "Investment", "General"
+        };
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, categories);
+        binding.autoCompleteCategory.setAdapter(adapter);
+        binding.autoCompleteCategory.setThreshold(1); // Start showing suggestions from 1st character
+
+        // Show full list on click if empty or focused
+        binding.autoCompleteCategory.setOnClickListener(v -> binding.autoCompleteCategory.showDropDown());
+        binding.autoCompleteCategory.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus)
+                binding.autoCompleteCategory.showDropDown();
+        });
     }
 
     private void saveAsExpense(long transactionTime) {
         String title = binding.editTextTitle.getText().toString().trim();
         String description = binding.editTextDescription.getText().toString().trim();
+        String categoryTag = binding.autoCompleteCategory.getText().toString().trim();
+
         if (TextUtils.isEmpty(title)) {
             Toast.makeText(this, "Please enter a title first.", Toast.LENGTH_SHORT).show();
             return;
@@ -162,7 +189,21 @@ public class DetailActivity extends AppCompatActivity {
         itemToSave.category = "RECEIPT";
         itemToSave.reminderTime = transactionTime; // Set the correct transaction date
         itemToSave.isActive = false;
-        itemToSave.amount = extractAmountFromText(title + " " + description);
+
+        double parsedAmount = extractAmountFromText(title + " " + description);
+        if (parsedAmount >= 0) {
+            itemToSave.amount = parsedAmount;
+        } else if (!isEditMode) {
+            itemToSave.amount = 0.0;
+        }
+        // else preserve valid amount
+
+        // Save the chosen category as a tag
+        if (!TextUtils.isEmpty(categoryTag)) {
+            itemToSave.tags = categoryTag;
+        } else {
+            itemToSave.tags = "General";
+        }
 
         if (isEditMode) {
             reminderViewModel.update(itemToSave);
@@ -192,6 +233,12 @@ public class DetailActivity extends AppCompatActivity {
             binding.chipMarkExpense.setVisibility(View.GONE);
         } else {
             binding.chipMarkExpense.setVisibility(View.VISIBLE);
+        }
+
+        if (item.tags != null && !item.tags.isEmpty()) {
+            binding.autoCompleteCategory.setText(item.tags);
+        } else {
+            binding.autoCompleteCategory.setText("General");
         }
 
         if (item.reminderTime > 0 && item.isActive) {
@@ -370,6 +417,7 @@ public class DetailActivity extends AppCompatActivity {
     private void saveItemManually() {
         String title = binding.editTextTitle.getText().toString().trim();
         String description = binding.editTextDescription.getText().toString().trim();
+        String categoryTag = binding.autoCompleteCategory.getText().toString().trim(); // ✅ Added this line
 
         if (TextUtils.isEmpty(title)) {
             Toast.makeText(this, "Please enter a title", Toast.LENGTH_SHORT).show();
@@ -401,7 +449,21 @@ public class DetailActivity extends AppCompatActivity {
             itemToSave.isActive = false;
             if ("RECEIPT".equals(itemToSave.category)) {
                 String combinedText = itemToSave.title + " " + itemToSave.description;
-                itemToSave.amount = extractAmountFromText(combinedText);
+                double parsedAmount = extractAmountFromText(combinedText);
+
+                if (parsedAmount >= 0) {
+                    itemToSave.amount = parsedAmount;
+                } else if (!isEditMode) {
+                    itemToSave.amount = 0.0;
+                }
+                // else: isEditMode && parsedAmount == -1 -> Keep existing itemToSave.amount!
+
+                // Save the chosen category as a tag
+                if (!TextUtils.isEmpty(categoryTag)) {
+                    itemToSave.tags = categoryTag;
+                } else {
+                    itemToSave.tags = "General";
+                }
             } else {
                 itemToSave.category = "NOTE";
                 itemToSave.reminderTime = 0;
@@ -544,21 +606,24 @@ public class DetailActivity extends AppCompatActivity {
 
     private double extractAmountFromText(String text) {
         if (text == null || text.isEmpty()) {
-            return 0.0;
+            return -1.0;
         }
         try {
-            // This regular expression finds the first sequence of digits, allowing for a
-            // decimal point.
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d+\\.?\\d*|\\.\\d+)");
-            java.util.regex.Matcher matcher = pattern.matcher(text);
-            if (matcher.find()) {
-                String numberStr = matcher.group(0);
+            // Strict Mode: ONLY match if preceded by a currency symbol.
+            // This prevents "Order #123456" from being parsed as 123456.0
+            java.util.regex.Pattern currencyPattern = java.util.regex.Pattern
+                    .compile("(?i)(?:rs\\.?|inr|₹)\\s*([\\d,]+(?:\\.\\d+)?)");
+            java.util.regex.Matcher currencyMatcher = currencyPattern.matcher(text);
+
+            if (currencyMatcher.find()) {
+                String numberStr = currencyMatcher.group(1).replaceAll(",", "");
                 return Double.parseDouble(numberStr);
             }
+
+            return -1.0;
         } catch (NumberFormatException e) {
-            return 0.0;
+            return -1.0;
         }
-        return 0.0;
     }
 
     private String getCategoryFromMcc(String mcc) {

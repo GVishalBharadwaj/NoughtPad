@@ -10,10 +10,10 @@ public class TransactionParser {
     // Pattern 1: "Rs. 500 debited..." or "INR 500 spent..."
     private static final Pattern AMOUNT_PATTERN = Pattern.compile("(?i)(?:rs\\.?|inr)\\s*(\\d+(?:\\.\\d{1,2})?)");
 
-    // Pattern 2: "Debited", "Spent", "Sent", "Paid" - ensure it's a debit
-    // transaction
+    // Pattern 2: "Debited", "Spent", "Sent", "Paid" etc.
     private static final Pattern DEBIT_KEYWORD_PATTERN = Pattern
             .compile("(?i)(debited|spent|sent|paid|transfer|withdrawal)");
+    private static final Pattern CREDIT_KEYWORD_PATTERN = Pattern.compile("(?i)(credited|received|deposited|added)");
 
     // Pattern 3: Merchant/Payee Extraction
     // "to Zomato", "at Starbucks", "VPA: vishal@upi"
@@ -27,25 +27,26 @@ public class TransactionParser {
     public static class TransactionInfo {
         public double amount;
         public String merchant;
-        public String account; // Optional: last 4 digits
+        public String description; // New field for clean description
         public long timestamp;
-        public boolean isDebit;
+        public boolean isDebit; // true = expense, false = income
 
         @Override
         public String toString() {
-            return "Amt: " + amount + ", Merch: " + merchant;
+            return (isDebit ? "Debit: " : "Credit: ") + amount + ", Merch: " + merchant + ", Desc: " + description;
         }
     }
 
     public static TransactionInfo parse(String message) {
         if (message == null)
             return null;
-        message = message.trim().replaceAll("\\s+", " "); // Normalize spaces
+        message = message.trim().replaceAll("\\s+", " ");
 
-        // 1. Check if it's a Debit transaction
-        if (!DEBIT_KEYWORD_PATTERN.matcher(message).find()) {
-            return null; // Ignore credits, OTPs, offers
-        }
+        boolean isDebit = DEBIT_KEYWORD_PATTERN.matcher(message).find();
+        boolean isCredit = CREDIT_KEYWORD_PATTERN.matcher(message).find();
+
+        if (!isDebit && !isCredit)
+            return null; // Not a relevant transaction
 
         // 2. Extract Amount
         Matcher amountMatcher = AMOUNT_PATTERN.matcher(message);
@@ -59,7 +60,8 @@ public class TransactionParser {
         } catch (NumberFormatException e) {
             return null;
         }
-        info.isDebit = true;
+
+        info.isDebit = !isCredit;
         info.timestamp = System.currentTimeMillis();
 
         // 3. Extract Merchant
@@ -71,8 +73,11 @@ public class TransactionParser {
         } else if (m1.find()) {
             info.merchant = cleanMerchantName(m1.group(1));
         } else {
-            info.merchant = "Unknown Merchant";
+            info.merchant = isCredit ? "Unknown Source" : "Unknown Merchant";
         }
+
+        // 4. Generate Clean Description
+        info.description = cleanDescription(message, info.merchant);
 
         return info;
     }
@@ -81,11 +86,45 @@ public class TransactionParser {
         if (name == null)
             return "Unknown";
         String clean = name.trim();
-        // Remove common trails
         clean = clean.replaceAll("(?i)(via|on|ref|bal|thru|through).*", "").trim();
-        // Capitalize
         if (clean.length() > 20)
             clean = clean.substring(0, 20) + "...";
         return clean;
+    }
+
+    private static String cleanDescription(String rawMessage, String merchant) {
+        if (rawMessage == null)
+            return "Transaction detected";
+
+        // Remove Account Numbers (e.g. "A/c *1234", "ending 1234", "A/c 1234")
+        String clean = rawMessage.replaceAll("(?i)(a/c|acct|account)\\s*[*x]*\\d+", "")
+                .replaceAll("(?i)ending\\s+(?:in\\s+)?[*x]*\\d+", "");
+
+        // Remove Balance Info (e.g. "Avail Bal Rs 100", "Clr Bal", "Net Bal")
+        clean = clean.replaceAll("(?i)(avail|clr|net|main|led)\\s+bal(?:ance)?.*", "");
+
+        // Remove Request/Reference IDs if they are long
+        clean = clean.replaceAll("(?i)(ref|txnid|upi ref|bk id)\\s*[:\\-]?\\s*[a-z0-9]+", "");
+
+        // Remove common prefixes already covered by metadata
+        clean = clean.replaceAll("(?i)(debited|credited|sent|paid|received|spent)\\s+.*", "");
+
+        // Clean up extra spaces/punctuation
+        clean = clean.replaceAll("[:\\-]", " ").trim();
+        clean = clean.replaceAll("\\s+", " ");
+
+        // Construct a readable string
+        StringBuilder builder = new StringBuilder();
+        if (rawMessage.toLowerCase().contains("upi")) {
+            builder.append("Payment via UPI");
+        } else if (rawMessage.toLowerCase().contains("card") || rawMessage.toLowerCase().contains("atm")) {
+            builder.append("Card Transaction");
+        } else if (rawMessage.toLowerCase().contains("neft") || rawMessage.toLowerCase().contains("imps")) {
+            builder.append("Bank Transfer");
+        } else {
+            builder.append("Transaction");
+        }
+
+        return builder.toString();
     }
 }

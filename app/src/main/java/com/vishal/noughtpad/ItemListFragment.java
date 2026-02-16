@@ -98,62 +98,56 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
     }
 
     private void calculateAndDisplayExpenses(View view, List<ReminderItem> allItems) {
-        final TextView tvToday = view.findViewById(R.id.text_total_today);
-        final TextView tvWeek = view.findViewById(R.id.text_total_week);
-        final TextView tvMonth = view.findViewById(R.id.text_total_month);
-        final TextView tvAllTime = view.findViewById(R.id.text_total_all_time);
+        final TextView tvBalance = view.findViewById(R.id.text_total_balance);
+        final TextView tvIncome = view.findViewById(R.id.text_total_income);
+        final TextView tvExpense = view.findViewById(R.id.text_total_expense);
         final com.github.mikephil.charting.charts.PieChart pieChart = view.findViewById(R.id.pieChart);
 
-        double totalToday = 0;
-        double totalWeek = 0;
-        double totalMonth = 0;
-        double totalAllTime = 0;
-
-        long startOfDay = getStartOfDay();
-        long startOfWeek = getStartOfWeek();
-        long startOfMonth = getStartOfMonth();
+        double totalIncome = 0;
+        double totalExpense = 0;
 
         // Aggregation for Chart
         java.util.Map<String, Double> categoryTotals = new java.util.HashMap<>();
 
         for (ReminderItem item : allItems) {
             if ("RECEIPT".equals(item.category)) {
+
+                boolean isIncome = "income".equalsIgnoreCase(item.type);
                 double amt = item.amount;
-                totalAllTime += amt;
-                if (item.reminderTime >= startOfDay)
-                    totalToday += amt;
-                if (item.reminderTime >= startOfWeek)
-                    totalWeek += amt;
-                if (item.reminderTime >= startOfMonth)
-                    totalMonth += amt;
 
-                // Parse tags/categories for the chart (e.g., "Groceries", "Food")
-                // If details contain "Category: X", extract X. Or use item.title?
-                // Let's rely on simple extraction from description if available, or just
-                // "Uncategorized"
-                String cat = "Misc";
-                if (item.description.contains("Category:")) {
-                    String[] parts = item.description.split("Category:");
-                    if (parts.length > 1) {
-                        cat = parts[1].trim().split("\n")[0];
+                if (isIncome) {
+                    totalIncome += amt;
+                } else {
+                    totalExpense += amt;
+
+                    // Only add expenses to the chart
+                    String cat = "Misc";
+                    if (item.tags != null && !item.tags.isEmpty()) {
+                        cat = item.tags.split(",")[0];
+                    } else if (item.description.contains("Category:")) {
+                        String[] parts = item.description.split("Category:");
+                        if (parts.length > 1) {
+                            cat = parts[1].trim().split("\n")[0];
+                        }
                     }
-                } else if (item.tags != null && !item.tags.isEmpty()) {
-                    cat = item.tags.split(",")[0];
+                    categoryTotals.put(cat, categoryTotals.getOrDefault(cat, 0.0) + amt);
                 }
-
-                categoryTotals.put(cat, categoryTotals.getOrDefault(cat, 0.0) + amt);
             }
         }
 
+        double balance = totalIncome - totalExpense;
+
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("en", "IN"));
-        tvToday.setText(currencyFormat.format(totalToday));
-        tvWeek.setText(currencyFormat.format(totalWeek));
-        tvMonth.setText(currencyFormat.format(totalMonth));
-        tvAllTime.setText(currencyFormat.format(totalAllTime));
+        if (tvBalance != null)
+            tvBalance.setText(currencyFormat.format(balance));
+        if (tvIncome != null)
+            tvIncome.setText(currencyFormat.format(totalIncome));
+        if (tvExpense != null)
+            tvExpense.setText(currencyFormat.format(totalExpense));
 
         // Update Chart
         if (pieChart != null) {
-            setupPieChart(pieChart, categoryTotals, totalAllTime);
+            setupPieChart(pieChart, categoryTotals, totalExpense);
         }
     }
 
@@ -167,12 +161,18 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
         com.github.mikephil.charting.data.PieDataSet dataSet = new com.github.mikephil.charting.data.PieDataSet(entries,
                 "Expenses");
 
-        // Colors
+        // Colors: High Contrast Material 500/600 shades
         java.util.List<Integer> colors = new ArrayList<>();
         int[] MATERIAL_COLORS = {
-                android.graphics.Color.rgb(46, 204, 113), android.graphics.Color.rgb(52, 152, 219),
-                android.graphics.Color.rgb(241, 196, 15), android.graphics.Color.rgb(231, 76, 60),
-                android.graphics.Color.rgb(155, 89, 182), android.graphics.Color.rgb(52, 73, 94)
+                android.graphics.Color.parseColor("#F44336"), // Red
+                android.graphics.Color.parseColor("#2196F3"), // Blue
+                android.graphics.Color.parseColor("#4CAF50"), // Green
+                android.graphics.Color.parseColor("#FF9800"), // Orange
+                android.graphics.Color.parseColor("#9C27B0"), // Purple
+                android.graphics.Color.parseColor("#00BCD4"), // Cyan
+                android.graphics.Color.parseColor("#FFC107"), // Amber
+                android.graphics.Color.parseColor("#607D8B"), // Blue Grey
+                android.graphics.Color.parseColor("#795548") // Brown
         };
         for (int c : MATERIAL_COLORS)
             colors.add(c);
@@ -188,6 +188,20 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
         chart.getDescription().setEnabled(false);
         chart.setHoleRadius(40f);
         chart.setTransparentCircleRadius(45f);
+
+        // Legend Configuration
+        com.github.mikephil.charting.components.Legend l = chart.getLegend();
+        l.setVerticalAlignment(com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM);
+        l.setHorizontalAlignment(com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER);
+        l.setOrientation(com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL);
+        l.setDrawInside(false);
+        l.setWordWrapEnabled(true);
+        // Use a high-contrast color (standard black/dark grey for light theme)
+        l.setTextColor(android.graphics.Color.parseColor("#ff000000")); // Black text
+        l.setXEntrySpace(7f);
+        l.setYEntrySpace(0f);
+        l.setYOffset(0f);
+
         chart.animateY(1000);
         chart.invalidate();
     }

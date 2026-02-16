@@ -58,7 +58,8 @@ public class NotificationTransactionListener extends NotificationListenerService
 
         TransactionParser.TransactionInfo info = TransactionParser.parse(fullText);
 
-        if (info != null && info.isDebit) {
+        // info.isDebit is true for Debit, false for Credit/Income
+        if (info != null) {
             Log.d(TAG, "Transaction Detected: " + info);
             saveTransaction(info);
         }
@@ -77,12 +78,30 @@ public class NotificationTransactionListener extends NotificationListenerService
 
             ReminderItem item = new ReminderItem();
             item.title = info.merchant;
-            item.description = "Auto-detected from " + info.merchant;
+            item.description = info.description; // Use the clean description from Parser
             item.category = "RECEIPT";
-            item.type = "note";
+
+            // Handle Credit/Income
+            // We use 'note' type for expenses (legacy default) and 'income' for credits
+            item.type = info.isDebit ? "note" : "income";
+
             item.amount = info.amount;
             item.reminderTime = System.currentTimeMillis();
             item.isActive = false;
+
+            // Auto-Categorization Logic (Only for Debits usually)
+            if (info.isDebit) {
+                String existingCat = database.reminderDao().getLastCategory(info.merchant);
+                // If we found a category that isn't the default "RECEIPT"
+                if (existingCat != null && !existingCat.isEmpty() && !"RECEIPT".equals(existingCat)) {
+                    item.category = "RECEIPT";
+                    item.tags = existingCat;
+                    // item.description += "\nCategory: " + existingCat; // No need to append to
+                    // description anymore
+                }
+            } else {
+                // item.description += "\nType: Income"; // No need, redundant
+            }
 
             database.reminderDao().insert(item);
             Log.d(TAG, "Transaction Saved to DB");

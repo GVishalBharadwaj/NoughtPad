@@ -128,16 +128,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // NEW: Add listener for Scan & Pay (using camera icon for now, or add a new
-        // one)
-        // For this iteration, I'll repurpose the "Camera" FAB to open QR Scanner
-        // instead of just taking a photo
-        // Or better, add a new logic.
-        // Let's make 'fabCamera' open the QR Scanner Activity
-        binding.fabCamera.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, QRScannerActivity.class);
-            startActivity(intent);
-        });
+        binding.fabCamera.setOnClickListener(v -> openCamera());
     }
 
     private void setupResultLaunchers() {
