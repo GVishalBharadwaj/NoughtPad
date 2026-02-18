@@ -60,16 +60,17 @@ public class NotificationTransactionListener extends NotificationListenerService
 
         // info.isDebit is true for Debit, false for Credit/Income
         if (info != null) {
-            Log.d(TAG, "Transaction Detected: " + info);
+            Log.d(TAG, "Transaction Detected from " + packageName + ": " + info);
             saveTransaction(info);
         }
     }
 
     private void saveTransaction(TransactionParser.TransactionInfo info) {
         executor.execute(() -> {
-            // Check for duplicates (same amount & merchant within last 10 minutes)
-            long tenMinutesAgo = System.currentTimeMillis() - (10 * 60 * 1000);
-            int count = database.reminderDao().checkForDuplicate(info.amount, info.merchant, tenMinutesAgo);
+            // Check for duplicates (same amount & merchant within last 2 hours)
+            // This handles delayed syncing between SMS, Email, and Bank Apps
+            long twoHoursAgo = System.currentTimeMillis() - (2 * 60 * 60 * 1000);
+            int count = database.reminderDao().checkForDuplicate(info.amount, info.merchant, twoHoursAgo);
 
             if (count > 0) {
                 Log.d(TAG, "Duplicate Transaction Ignored: " + info);

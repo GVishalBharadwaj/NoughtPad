@@ -1,0 +1,148 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/C:/Users/gvish/.gradle/wrapper/dists/gradle-8.13-bin/5xuhj0ry160q40clulazy9h7d/gradle-8.13/lib/native-platform-0.22-milestone-28.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:dataBindingMergeDependencyArtifactsDebug UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugResources
+> Task :app:mergeDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:parseDebugLocalResources
+> Task :app:dataBindingGenBaseClassesDebug UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:processDebugResources
+> Task :app:kspDebugKotlin
+> Task :app:compileDebugKotlin NO-SOURCE
+
+> Task :app:compileDebugJavaWithJavac
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:93: error: cannot find symbol
+            binding.chipRemoveReminder.setVisibility(View.GONE);
+                   ^
+  symbol:   variable chipRemoveReminder
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:102: error: cannot find symbol
+                    binding.categoryInputLayout.setVisibility(View.VISIBLE); // Explicitly show
+                           ^
+  symbol:   variable categoryInputLayout
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:105: error: cannot find symbol
+                binding.categoryInputLayout.setVisibility(View.GONE); // Hidden by default
+                       ^
+  symbol:   variable categoryInputLayout
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:184: error: cannot find symbol
+        setupCategoryDropdown();
+        ^
+  symbol:   method setupCategoryDropdown()
+  location: class DetailActivity
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:273: error: cannot find symbol
+        if (!TextUtils.isEmpty(categoryTag)) {
+                               ^
+  symbol:   variable categoryTag
+  location: class DetailActivity
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:274: error: cannot find symbol
+            itemToSave.tags = categoryTag;
+                              ^
+  symbol:   variable categoryTag
+  location: class DetailActivity
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:310: error: cannot find symbol
+            binding.autoCompleteCategory.setText(item.tags);
+                   ^
+  symbol:   variable autoCompleteCategory
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:312: error: cannot find symbol
+            binding.autoCompleteCategory.setText("General");
+                   ^
+  symbol:   variable autoCompleteCategory
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:319: error: cannot find symbol
+            binding.chipRemoveReminder.setVisibility(View.VISIBLE);
+                   ^
+  symbol:   variable chipRemoveReminder
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:322: error: cannot find symbol
+            binding.chipRemoveReminder.setVisibility(View.GONE);
+                   ^
+  symbol:   variable chipRemoveReminder
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:588: error: cannot find symbol
+        binding.buttonAddReminder.setText("Add Reminder");
+               ^
+  symbol:   variable buttonAddReminder
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:589: error: cannot find symbol
+        binding.chipRemoveReminder.setVisibility(View.GONE);
+               ^
+  symbol:   variable chipRemoveReminder
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:637: error: cannot find symbol
+        binding.buttonAddReminder.setText("Edit Reminder");
+               ^
+  symbol:   variable buttonAddReminder
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:638: error: cannot find symbol
+        binding.chipRemoveReminder.setVisibility(View.VISIBLE);
+               ^
+  symbol:   variable chipRemoveReminder
+  location: variable binding of type ActivityDetailBinding
+C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:675: error: cannot find symbol
+        binding.dateSelectionTitle.setText("Date set to: " + sdf.format(reminderCalendar.getTime()));
+               ^
+  symbol:   variable dateSelectionTitle
+  location: variable binding of type ActivityDetailBinding
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+15 errors
+
+> Task :app:compileDebugJavaWithJavac FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/gvish/StudioProjects/NoughtPad/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugJavaWithJavac'.
+> Compilation failed; see the compiler output below.
+  C:\Users\gvish\StudioProjects\NoughtPad\app\src\main\java\com\vishal\noughtpad\DetailActivity.java:93: error: cannot find symbol
+              binding.chipRemoveReminder.setVisibility(View.GONE);
+                     ^
+    symbol:   variable chipRemoveReminder
+    location: variable binding of type ActivityDetailBinding
+  15 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights.
+
+BUILD FAILED in 12s
+33 actionable tasks: 10 executed, 23 up-to-date
