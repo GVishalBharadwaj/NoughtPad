@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="@color/md_theme_background">
 
     <LinearLayout
         android:id="@+id/main"
@@ -20,9 +21,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Title..."
+            android:textColorHint="@color/colorTextSecondary"
             android:inputType="textCapSentences"
             android:textSize="22sp"
             android:textStyle="bold"
+            android:textColor="@color/md_theme_onSurface"
             android:background="@android:color/transparent"
             android:minHeight="48dp"
             android:autofillHints="name" />
@@ -33,13 +36,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Category">
+            android:hint="Category"
+            app:boxStrokeColor="@color/md_theme_primary"
+            app:hintTextColor="@color/md_theme_primary">
 
             <AutoCompleteTextView
                 android:id="@+id/auto_complete_category"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapWords"
+                android:textColor="@color/md_theme_onSurface"
                 android:text="General" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -50,7 +56,9 @@
             android:layout_weight="1"
             android:layout_marginTop="8dp"
             android:hint="Note..."
+            android:textColorHint="@color/colorTextSecondary"
             android:gravity="top"
+            android:textColor="@color/md_theme_onSurface"
             android:inputType="textCapSentences|textMultiLine"
             android:background="@android:color/transparent"
             android:autofillHints="none" />
@@ -69,6 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:srcCompat="@drawable/ic_reminder"
+                app:tint="@color/md_theme_primary"
                 android:contentDescription="Reminder Icon" />
 
             <TextView
@@ -76,6 +85,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:textColor="@color/md_theme_onSurface"
                 tools:text="Sep 01, 2025 at 11:14 PM"/>
         </LinearLayout>
 
@@ -124,6 +134,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Set Expense Date"
+                android:textColor="@color/md_theme_onSurface"
                 android:textAppearance="?attr/textAppearanceLabelLarge"/>
 
             <com.google.android.material.chip.ChipGroup
@@ -132,19 +143,19 @@
                 android:layout_height="wrap_content"
                 app:singleSelection="true">
                 <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_today"
+                    android:id="@+id/chip_detail_today"
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Today"/>
                 <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_yesterday"
+                    android:id="@+id/chip_detail_yesterday"
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Yesterday"/>
                 <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_custom_expense_date"
+                    android:id="@+id/chip_detail_custom_date"
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -166,8 +177,8 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:text="Delete"
-                android:textColor="@android:color/holo_red_dark"
-                app:strokeColor="@android:color/holo_red_dark"
+                android:textColor="@color/colorExpense"
+                app:strokeColor="@color/colorExpense"
                 android:visibility="gone"
                 tools:visibility="visible"/>
 

@@ -19,23 +19,30 @@ import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.vishal.noughtpad.databinding.ActivityMainBinding;
-import com.google.android.material.tabs.TabLayoutMediator;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final String EXTRA_ID = "com.vishal.noughtpad.EXTRA_ID";
     private ActivityMainBinding binding;
-    private ViewPagerAdapter viewPagerAdapter;
-    private ReminderViewModel reminderViewModel; // ViewModel owned by the Activity
+    private ReminderViewModel reminderViewModel;
     private boolean isAllFabsVisible;
     private ActivityResultLauncher<PickVisualMediaRequest> galleryLauncher;
     private ActivityResultLauncher<Uri> cameraLauncher;
     private ActivityResultLauncher<String> requestCameraPermissionLauncher;
     private Uri tempImageUri;
+
+    // Keep references to fragments for efficient switching
+    private Fragment expensesFragment;
+    private Fragment notesFragment;
+    private Fragment remindersFragment;
+    private Fragment activeFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
 
-        // Initialize the ViewModel here. It will be shared with the fragments.
         reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
@@ -53,14 +59,52 @@ public class MainActivity extends AppCompatActivity {
             float density = getResources().getDisplayMetrics().density;
             int paddingReduction = (int) (8 * density);
             binding.appBarLayout.setPadding(systemBars.left, systemBars.top - paddingReduction, systemBars.right, 0);
-            binding.viewPager.setPadding(0, 0, 0, systemBars.bottom);
             return insets;
         });
 
-        setupTabs();
+        setupFragments();
+        setupBottomNavigation();
         setupResultLaunchers();
         setupFab();
         checkNotificationPermission();
+    }
+
+    private void setupFragments() {
+        expensesFragment = ItemListFragment.newInstance(new ArrayList<>(Arrays.asList("RECEIPT")));
+        notesFragment = ItemListFragment.newInstance(new ArrayList<>(Arrays.asList("NOTE")));
+        remindersFragment = ItemListFragment.newInstance(new ArrayList<>(Arrays.asList("ALL_REMINDERS")));
+
+        // Add all fragments, hide all except default (Expenses)
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container, remindersFragment, "reminders").hide(remindersFragment)
+                .add(R.id.fragment_container, notesFragment, "notes").hide(notesFragment)
+                .add(R.id.fragment_container, expensesFragment, "expenses")
+                .commit();
+        activeFragment = expensesFragment;
+    }
+
+    private void setupBottomNavigation() {
+        binding.bottomNavigation.setSelectedItemId(R.id.nav_expenses);
+        binding.bottomNavigation.setOnItemSelectedListener(item -> {
+            Fragment selected = null;
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_expenses) {
+                selected = expensesFragment;
+            } else if (itemId == R.id.nav_notes) {
+                selected = notesFragment;
+            } else if (itemId == R.id.nav_reminders) {
+                selected = remindersFragment;
+            }
+
+            if (selected != null && selected != activeFragment) {
+                getSupportFragmentManager().beginTransaction()
+                        .hide(activeFragment)
+                        .show(selected)
+                        .commit();
+                activeFragment = selected;
+            }
+            return true;
+        });
     }
 
     private void checkNotificationPermission() {
@@ -81,25 +125,6 @@ public class MainActivity extends AppCompatActivity {
                         .show();
             }
         }
-    }
-
-    private void setupTabs() {
-        viewPagerAdapter = new ViewPagerAdapter(this);
-        binding.viewPager.setAdapter(viewPagerAdapter);
-        new TabLayoutMediator(binding.tabLayout, binding.viewPager,
-                (tab, position) -> {
-                    switch (position) {
-                        case 0:
-                            tab.setText("Reminders");
-                            break;
-                        case 1:
-                            tab.setText("Notes");
-                            break;
-                        case 2:
-                            tab.setText("Expenses");
-                            break;
-                    }
-                }).attach();
     }
 
     private void setupFab() {

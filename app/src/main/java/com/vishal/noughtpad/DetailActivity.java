@@ -148,8 +148,8 @@ public class DetailActivity extends AppCompatActivity {
         });
 
         // These listeners are ONLY for setting and saving an expense
-        binding.chipYesterday.setOnClickListener(v -> saveAsExpense(getYesterday()));
-        binding.chipCustomExpenseDate.setOnClickListener(v -> showExpenseDatePicker());
+        binding.chipDetailYesterday.setOnClickListener(v -> saveAsExpense(getYesterday()));
+        binding.chipDetailCustomDate.setOnClickListener(v -> showExpenseDatePicker());
 
         setupCategoryDropdown();
     }

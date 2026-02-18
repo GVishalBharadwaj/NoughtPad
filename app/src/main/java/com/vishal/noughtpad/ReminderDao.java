@@ -40,4 +40,10 @@ public interface ReminderDao {
 
     @Query("SELECT category FROM reminder_items WHERE title = :title ORDER BY id DESC LIMIT 1")
     String getLastCategory(String title);
+
+    @Query("SELECT tags FROM reminder_items WHERE title = :merchant AND tags IS NOT NULL AND tags != '' ORDER BY id DESC LIMIT 1")
+    String getLastTagForMerchant(String merchant);
+
+    @Query("SELECT * FROM reminder_items WHERE category = 'RECEIPT' AND reminderTime >= :startTime AND reminderTime <= :endTime ORDER BY reminderTime DESC")
+    LiveData<List<ReminderItem>> getExpensesByDateRange(long startTime, long endTime);
 }

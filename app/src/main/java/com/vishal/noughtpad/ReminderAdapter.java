@@ -96,28 +96,19 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, RecyclerView.View
             NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("en", "IN"));
             String amountText = format.format(item.amount);
 
-            // Check if it's Income or Expense (Logic: Income items might have a negative
-            // amount stored or a flag?
-            // For now, let's assume raw amount is positive. We need a way to know if it's
-            // Credit.
-            // Let's use 'type' field? If type == "income" -> Green. Else Red.
             boolean isIncome = "income".equalsIgnoreCase(item.type);
 
             if (isIncome) {
                 amount.setText("+ " + amountText);
-                amount.setTextColor(Color.parseColor("#388E3C")); // Green
+                amount.setTextColor(Color.parseColor("#69F0AE")); // Green accent
             } else {
                 amount.setText("- " + amountText);
-                amount.setTextColor(Color.parseColor("#D32F2F")); // Red
+                amount.setTextColor(Color.parseColor("#FF5252")); // Red accent
             }
 
-            // Category tag
-            String cat = "Misc";
-            if (item.description.contains("Category:")) {
-                String[] parts = item.description.split("Category:");
-                if (parts.length > 1)
-                    cat = parts[1].trim().split("\n")[0];
-            } else if (item.tags != null && !item.tags.isEmpty()) {
+            // Category from tags
+            String cat = "General";
+            if (item.tags != null && !item.tags.isEmpty()) {
                 cat = item.tags.split(",")[0];
             }
             category.setText(cat);
@@ -175,7 +166,8 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, RecyclerView.View
                     oldItem.reminderTime == newItem.reminderTime &&
                     oldItem.isActive == newItem.isActive &&
                     oldItem.amount == newItem.amount &&
-                    oldItem.category.equals(newItem.category);
+                    oldItem.category.equals(newItem.category) &&
+                    (oldItem.tags == null ? newItem.tags == null : oldItem.tags.equals(newItem.tags));
         }
     };
 }

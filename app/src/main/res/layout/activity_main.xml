@@ -6,46 +6,46 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/md_theme_background"
     tools:context=".MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/app_bar_layout"  android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/md_theme_background"
+        app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="@string/app_name" />
-
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tab_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:contentDescription="Content categories"
-            android:layout_marginTop="-10dp" />
-
-
+            app:title="@string/app_name"
+            app:titleTextColor="@color/md_theme_onBackground" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/view_pager"
+    <!-- Fragment Container -->
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:paddingBottom="80dp" />
 
-
+    <!-- FAB Cluster -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_text_note"
+        android:id="@+id/fab_camera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="92dp"
-        android:contentDescription="Create Text Note"
+        android:layout_marginBottom="296dp"
+        android:contentDescription="Take Photo"
         android:visibility="invisible"
-        app:srcCompat="@android:drawable/ic_menu_edit" />
+        app:backgroundTint="@color/md_theme_primaryContainer"
+        app:tint="@color/md_theme_onPrimaryContainer"
+        app:srcCompat="@android:drawable/ic_menu_camera" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_upload_image"
@@ -53,28 +53,49 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="164dp"
+        android:layout_marginBottom="224dp"
         android:contentDescription="Upload Image"
         android:visibility="invisible"
+        app:backgroundTint="@color/md_theme_primaryContainer"
+        app:tint="@color/md_theme_onPrimaryContainer"
         app:srcCompat="@android:drawable/ic_menu_gallery" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_camera"
+        android:id="@+id/fab_text_note"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="236dp"
-        android:contentDescription="Take Photo"
+        android:layout_marginBottom="152dp"
+        android:contentDescription="Create Text Note"
         android:visibility="invisible"
-        app:srcCompat="@android:drawable/ic_menu_camera" />
+        app:backgroundTint="@color/md_theme_primaryContainer"
+        app:tint="@color/md_theme_onPrimaryContainer"
+        app:srcCompat="@android:drawable/ic_menu_edit" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="88dp"
         android:contentDescription="Add new item"
+        app:backgroundTint="@color/md_theme_primary"
+        app:tint="@color/md_theme_onPrimary"
         app:srcCompat="@android:drawable/ic_input_add" />
+
+    <!-- Bottom Navigation -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/colorBottomNav"
+        app:itemIconTint="@color/md_theme_primary"
+        app:itemTextColor="@color/md_theme_primary"
+        app:itemActiveIndicatorStyle="@style/Widget.Material3.BottomNavigationView.ActiveIndicator"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

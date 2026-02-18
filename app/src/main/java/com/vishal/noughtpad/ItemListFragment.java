@@ -12,6 +12,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,6 +26,13 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
     private ReminderViewModel reminderViewModel;
     private ReminderAdapter adapter;
     private ArrayList<String> categoriesToShow;
+
+    // Period filter state
+    private static final int PERIOD_TODAY = 0;
+    private static final int PERIOD_WEEK = 1;
+    private static final int PERIOD_MONTH = 2;
+    private static final int PERIOD_ALL = 3;
+    private int currentPeriod = PERIOD_MONTH; // Default to month
 
     public static ItemListFragment newInstance(ArrayList<String> categories) {
         ItemListFragment fragment = new ItemListFragment();
@@ -65,6 +74,13 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
 
         reminderViewModel = new ViewModelProvider(requireActivity()).get(ReminderViewModel.class);
 
+        boolean isExpenseTab = categoriesToShow != null && categoriesToShow.contains("RECEIPT");
+
+        // Setup period filter chips for expense tab
+        if (isExpenseTab) {
+            setupPeriodFilterChips(view);
+        }
+
         // This single observer is our "source of truth" for all UI updates
         reminderViewModel.getAllItems().observe(getViewLifecycleOwner(), allItems -> {
             if (allItems == null)
@@ -87,17 +103,87 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
                     }
                 }
             }
-            adapter.submitList(filteredList);
 
-            // --- 2. If this is the Expenses tab, perform the calculations ---
-            boolean isExpenseTab = categoriesToShow != null && categoriesToShow.contains("RECEIPT");
+            // --- 2. If this is the Expenses tab, apply period filter & calculations ---
             if (isExpenseTab) {
-                calculateAndDisplayExpenses(view, allItems);
+                long periodStart = getPeriodStartTimestamp(currentPeriod);
+                List<ReminderItem> periodFiltered = new ArrayList<>();
+                for (ReminderItem item : filteredList) {
+                    if (currentPeriod == PERIOD_ALL || item.reminderTime >= periodStart) {
+                        periodFiltered.add(item);
+                    }
+                }
+                adapter.submitList(periodFiltered);
+                calculateAndDisplayExpenses(view, periodFiltered);
+            } else {
+                adapter.submitList(filteredList);
             }
         });
     }
 
-    private void calculateAndDisplayExpenses(View view, List<ReminderItem> allItems) {
+    private void setupPeriodFilterChips(View view) {
+        ChipGroup chipGroup = view.findViewById(R.id.chip_group_period);
+        Chip chipMonth = view.findViewById(R.id.chip_month);
+        if (chipGroup == null || chipMonth == null)
+            return;
+
+        // Default to Month
+        chipMonth.setChecked(true);
+
+        chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty())
+                return;
+            int checkedId = checkedIds.get(0);
+            if (checkedId == R.id.chip_today) {
+                currentPeriod = PERIOD_TODAY;
+            } else if (checkedId == R.id.chip_week) {
+                currentPeriod = PERIOD_WEEK;
+            } else if (checkedId == R.id.chip_month) {
+                currentPeriod = PERIOD_MONTH;
+            } else if (checkedId == R.id.chip_all) {
+                currentPeriod = PERIOD_ALL;
+            }
+            // Trigger re-observation by getting current data
+            List<ReminderItem> current = reminderViewModel.getAllItems().getValue();
+            if (current != null) {
+                refreshExpenseData(view, current);
+            }
+        });
+    }
+
+    private void refreshExpenseData(View view, List<ReminderItem> allItems) {
+        List<ReminderItem> filteredList = new ArrayList<>();
+        for (ReminderItem item : allItems) {
+            if ("RECEIPT".equals(item.category)) {
+                filteredList.add(item);
+            }
+        }
+
+        long periodStart = getPeriodStartTimestamp(currentPeriod);
+        List<ReminderItem> periodFiltered = new ArrayList<>();
+        for (ReminderItem item : filteredList) {
+            if (currentPeriod == PERIOD_ALL || item.reminderTime >= periodStart) {
+                periodFiltered.add(item);
+            }
+        }
+        adapter.submitList(periodFiltered);
+        calculateAndDisplayExpenses(view, periodFiltered);
+    }
+
+    private long getPeriodStartTimestamp(int period) {
+        switch (period) {
+            case PERIOD_TODAY:
+                return getStartOfDay();
+            case PERIOD_WEEK:
+                return getStartOfWeek();
+            case PERIOD_MONTH:
+                return getStartOfMonth();
+            default:
+                return 0;
+        }
+    }
+
+    private void calculateAndDisplayExpenses(View view, List<ReminderItem> items) {
         final TextView tvBalance = view.findViewById(R.id.text_total_balance);
         final TextView tvIncome = view.findViewById(R.id.text_total_income);
         final TextView tvExpense = view.findViewById(R.id.text_total_expense);
@@ -107,31 +193,23 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
         double totalExpense = 0;
 
         // Aggregation for Chart
-        java.util.Map<String, Double> categoryTotals = new java.util.HashMap<>();
+        java.util.Map<String, Double> categoryTotals = new java.util.LinkedHashMap<>();
 
-        for (ReminderItem item : allItems) {
-            if ("RECEIPT".equals(item.category)) {
+        for (ReminderItem item : items) {
+            boolean isIncome = "income".equalsIgnoreCase(item.type);
+            double amt = item.amount;
 
-                boolean isIncome = "income".equalsIgnoreCase(item.type);
-                double amt = item.amount;
+            if (isIncome) {
+                totalIncome += amt;
+            } else {
+                totalExpense += amt;
 
-                if (isIncome) {
-                    totalIncome += amt;
-                } else {
-                    totalExpense += amt;
-
-                    // Only add expenses to the chart
-                    String cat = "Misc";
-                    if (item.tags != null && !item.tags.isEmpty()) {
-                        cat = item.tags.split(",")[0];
-                    } else if (item.description.contains("Category:")) {
-                        String[] parts = item.description.split("Category:");
-                        if (parts.length > 1) {
-                            cat = parts[1].trim().split("\n")[0];
-                        }
-                    }
-                    categoryTotals.put(cat, categoryTotals.getOrDefault(cat, 0.0) + amt);
+                // Category from tags (primary) or fallback
+                String cat = "General";
+                if (item.tags != null && !item.tags.isEmpty()) {
+                    cat = item.tags.split(",")[0];
                 }
+                categoryTotals.put(cat, categoryTotals.getOrDefault(cat, 0.0) + amt);
             }
         }
 
@@ -158,51 +236,61 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
             entries.add(new com.github.mikephil.charting.data.PieEntry(entry.getValue().floatValue(), entry.getKey()));
         }
 
-        com.github.mikephil.charting.data.PieDataSet dataSet = new com.github.mikephil.charting.data.PieDataSet(entries,
-                "Expenses");
+        if (entries.isEmpty()) {
+            chart.clear();
+            chart.setCenterText("No Data");
+            chart.setCenterTextColor(android.graphics.Color.parseColor("#9E9E9E"));
+            chart.setCenterTextSize(14f);
+            chart.invalidate();
+            return;
+        }
 
-        // Colors: High Contrast Material 500/600 shades
+        com.github.mikephil.charting.data.PieDataSet dataSet = new com.github.mikephil.charting.data.PieDataSet(entries,
+                "");
+
+        // Premium Slate & Teal Spectrum
         java.util.List<Integer> colors = new ArrayList<>();
-        int[] MATERIAL_COLORS = {
-                android.graphics.Color.parseColor("#F44336"), // Red
-                android.graphics.Color.parseColor("#2196F3"), // Blue
-                android.graphics.Color.parseColor("#4CAF50"), // Green
-                android.graphics.Color.parseColor("#FF9800"), // Orange
-                android.graphics.Color.parseColor("#9C27B0"), // Purple
-                android.graphics.Color.parseColor("#00BCD4"), // Cyan
-                android.graphics.Color.parseColor("#FFC107"), // Amber
-                android.graphics.Color.parseColor("#607D8B"), // Blue Grey
-                android.graphics.Color.parseColor("#795548") // Brown
+        int[] CHART_COLORS = {
+                android.graphics.Color.parseColor("#1DE9B6"), // Neon Teal
+                android.graphics.Color.parseColor("#38BDF8"), // Sky Blue
+                android.graphics.Color.parseColor("#4ADE80"), // Bright Green
+                android.graphics.Color.parseColor("#818CF8"), // Indigo
+                android.graphics.Color.parseColor("#F472B6"), // Pink (Accents only)
+                android.graphics.Color.parseColor("#FBBF24"), // Amber
+                android.graphics.Color.parseColor("#64748B"), // Slate
         };
-        for (int c : MATERIAL_COLORS)
+        for (int c : CHART_COLORS)
             colors.add(c);
         dataSet.setColors(colors);
+        dataSet.setSliceSpace(2f);
+        dataSet.setValueLinePart1OffsetPercentage(80f);
 
         com.github.mikephil.charting.data.PieData data = new com.github.mikephil.charting.data.PieData(dataSet);
-        data.setValueTextSize(12f);
+        data.setValueTextSize(11f);
         data.setValueTextColor(android.graphics.Color.WHITE);
 
         chart.setData(data);
-        chart.setCenterText("Total\n₹" + (int) total);
-        chart.setCenterTextSize(16f);
+        chart.setCenterText("₹" + String.format(Locale.getDefault(), "%,.0f", total));
+        chart.setCenterTextSize(18f);
+        chart.setCenterTextColor(android.graphics.Color.WHITE);
         chart.getDescription().setEnabled(false);
-        chart.setHoleRadius(40f);
-        chart.setTransparentCircleRadius(45f);
+        chart.setHoleRadius(50f);
+        chart.setTransparentCircleRadius(55f);
+        chart.setHoleColor(android.graphics.Color.parseColor("#0F0F14"));
+        chart.setDrawEntryLabels(false);
 
-        // Legend Configuration
+        // Legend
         com.github.mikephil.charting.components.Legend l = chart.getLegend();
         l.setVerticalAlignment(com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM);
         l.setHorizontalAlignment(com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER);
         l.setOrientation(com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL);
         l.setDrawInside(false);
         l.setWordWrapEnabled(true);
-        // Use a high-contrast color (standard black/dark grey for light theme)
-        l.setTextColor(android.graphics.Color.parseColor("#ff000000")); // Black text
-        l.setXEntrySpace(7f);
-        l.setYEntrySpace(0f);
-        l.setYOffset(0f);
+        l.setTextColor(android.graphics.Color.parseColor("#E4E1E6"));
+        l.setXEntrySpace(12f);
+        l.setYEntrySpace(4f);
 
-        chart.animateY(1000);
+        chart.animateY(800);
         chart.invalidate();
     }
 

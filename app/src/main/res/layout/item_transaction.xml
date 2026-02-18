@@ -1,91 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/dark_card_bg"
     android:layout_marginBottom="8dp"
     android:layout_marginHorizontal="16dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp"
-    app:cardBackgroundColor="@color/md_theme_surface">
+    android:padding="16dp">
 
+    <!-- Category Icon Circle -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        app:cardCornerRadius="22dp"
+        app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+        app:strokeWidth="0dp"
+        app:cardElevation="0dp">
+
+        <ImageView
+            android:id="@+id/trans_icon"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_reminder"
+            app:tint="@color/md_theme_primary" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Title + Date -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="16dp">
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="14dp">
 
-        <!-- Category Icon -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            app:cardCornerRadius="24dp"
-            app:cardBackgroundColor="@color/md_theme_secondaryContainer"
-            app:strokeWidth="0dp">
-            
-            <ImageView
-                android:id="@+id/trans_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_reminder"
-                app:tint="@color/md_theme_onSecondaryContainer" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginStart="16dp">
-
-            <TextView
-                android:id="@+id/trans_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Zomato"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/md_theme_onSurface"
-                android:maxLines="1"
-                android:ellipsize="end"/>
-
-            <TextView
-                android:id="@+id/trans_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Today, 10:00 AM"
-                android:textSize="12sp"
-                android:textColor="@color/colorTextSecondary"/>
-        </LinearLayout>
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/trans_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="end">
+            android:text="Merchant"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/md_theme_onSurface"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
-            <TextView
-                android:id="@+id/trans_amount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="- ₹250.00"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/colorExpense"/>
-
-            <TextView
-                android:id="@+id/trans_category"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Food"
-                android:textSize="12sp"
-                android:textColor="@color/colorTextSecondary"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="2dp"
-                android:layout_marginTop="4dp"/>
-        </LinearLayout>
-
+        <TextView
+            android:id="@+id/trans_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today"
+            android:textSize="12sp"
+            android:textColor="@color/colorTextSecondary"
+            android:layout_marginTop="2dp" />
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <!-- Amount + Category -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/trans_amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="- ₹250"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorExpense" />
+
+        <TextView
+            android:id="@+id/trans_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Food"
+            android:textSize="11sp"
+            android:textColor="@color/md_theme_primary"
+            android:background="@drawable/chip_bg"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="2dp"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,21 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/md_theme_background">
 
-    <include layout="@layout/expense_summary_card" />
-    
-    <com.github.mikephil.charting.charts.PieChart
-        android:id="@+id/pieChart"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:layout_marginBottom="8dp"/>
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
+            <!-- Summary Card (included layout) -->
+            <include layout="@layout/expense_summary_card" />
+
+            <!-- Period Filter Chips -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_period"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_today"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Today"
+                    android:textColor="@color/md_theme_onSurface"
+                    app:chipBackgroundColor="@color/md_theme_surfaceVariant" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_week"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Week"
+                    android:textColor="@color/md_theme_onSurface"
+                    app:chipBackgroundColor="@color/md_theme_surfaceVariant" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_month"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Month"
+                    android:textColor="@color/md_theme_onSurface"
+                    app:chipBackgroundColor="@color/md_theme_surfaceVariant" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_all"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="All"
+                    android:textColor="@color/md_theme_onSurface"
+                    app:chipBackgroundColor="@color/md_theme_surfaceVariant" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Pie Chart -->
+            <com.github.mikephil.charting.charts.PieChart
+                android:id="@+id/pieChart"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp" />
+
+            <!-- Recent Transactions Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recent Transactions"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/md_theme_onBackground"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Transaction List -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_fragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

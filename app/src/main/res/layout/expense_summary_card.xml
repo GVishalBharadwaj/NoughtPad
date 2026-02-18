@@ -4,35 +4,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="16dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@color/md_theme_primaryContainer">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginTop="16dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="@android:color/transparent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:background="@drawable/gradient_card_bg"
+        android:padding="24dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Total Balance"
-            android:textColor="@color/md_theme_onPrimaryContainer"
-            android:alpha="0.8"
-            android:textSize="14sp" />
+            android:textColor="#B0A4E3"
+            android:textSize="14sp"
+            android:letterSpacing="0.05" />
 
         <TextView
             android:id="@+id/text_total_balance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="₹0.00"
-            android:textSize="32sp"
+            android:textSize="36sp"
             android:textStyle="bold"
-            android:textColor="@color/md_theme_onPrimaryContainer"
+            android:textColor="#FFFFFF"
             android:layout_marginTop="4dp"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="28dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -46,24 +49,23 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
-                
-                <LinearLayout 
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
-                    <ImageView 
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_check_circle" 
-                        app:tint="@color/colorIncome"/>
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@color/colorIncome" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Income"
-                        android:layout_marginStart="4dp"
-                        android:textColor="@color/md_theme_onPrimaryContainer"
-                        android:textSize="12sp"/>
+                        android:layout_marginStart="8dp"
+                        android:textColor="#B0A4E3"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <TextView
@@ -71,10 +73,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="₹0.00"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="@color/md_theme_onPrimaryContainer"
-                    android:layout_marginTop="2dp"/>
+                    android:textColor="@color/colorIncome"
+                    android:layout_marginTop="4dp" />
             </LinearLayout>
 
             <!-- Expense -->
@@ -82,25 +84,25 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:gravity="end">
 
-                <LinearLayout 
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
-                    <ImageView 
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_close_circle" 
-                        app:tint="@color/colorExpense"/>
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@color/colorExpense" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Expense"
-                        android:layout_marginStart="4dp"
-                        android:textColor="@color/md_theme_onPrimaryContainer"
-                        android:textSize="12sp"/>
+                        android:layout_marginStart="8dp"
+                        android:textColor="#B0A4E3"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <TextView
@@ -108,10 +110,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="₹0.00"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="@color/md_theme_onPrimaryContainer"
-                    android:layout_marginTop="2dp"/>
+                    android:textColor="@color/colorExpense"
+                    android:layout_marginTop="4dp" />
             </LinearLayout>
 
         </LinearLayout>

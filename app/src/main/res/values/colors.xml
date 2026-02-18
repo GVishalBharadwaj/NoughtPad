@@ -1,22 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Financial Theme Palette -->
-    <color name="md_theme_primary">#009688</color> <!-- Teal 500 -->
-    <color name="md_theme_onPrimary">#FFFFFF</color>
-    <color name="md_theme_primaryContainer">#B2DFDB</color>
-    <color name="md_theme_onPrimaryContainer">#004D40</color>
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- Premium Slate & Teal Theme                 -->
+    <!-- ═══════════════════════════════════════════ -->
 
-    <color name="md_theme_secondary">#455A64</color> <!-- Blue Grey -->
-    <color name="md_theme_onSecondary">#FFFFFF</color>
-    <color name="md_theme_secondaryContainer">#CFD8DC</color>
-    <color name="md_theme_onSecondaryContainer">#263238</color>
+    <!-- Primary: Neon Teal Accent -->
+    <color name="md_theme_primary">#1DE9B6</color>
+    <color name="md_theme_onPrimary">#003731</color>
+    <color name="md_theme_primaryContainer">#005048</color>
+    <color name="md_theme_onPrimaryContainer">#6FF9D9</color>
 
-    <color name="md_theme_background">#FAFAFA</color> <!-- Light Grey BG (Better than F5F5F5) -->
-    <color name="md_theme_onBackground">#212121</color>
-    <color name="md_theme_surface">#FFFFFF</color>
-    <color name="md_theme_onSurface">#212121</color>
-    
-    <color name="colorExpense">#D32F2F</color> <!-- Red 700 -->
-    <color name="colorIncome">#388E3C</color> <!-- Green 700 -->
-    <color name="colorTextSecondary">#616161</color> <!-- Darker Grey for better contrast -->
+    <!-- Secondary: Sky Blue -->
+    <color name="md_theme_secondary">#38BDF8</color>
+    <color name="md_theme_onSecondary">#00344B</color>
+    <color name="md_theme_secondaryContainer">#004B6A</color>
+    <color name="md_theme_onSecondaryContainer">#BDE9FF</color>
+
+    <!-- Backgrounds & Surfaces (Slate Palette) -->
+    <color name="md_theme_background">#0F172A</color> <!-- Rich Slate -->
+    <color name="md_theme_onBackground">#E2E8F0</color>
+    <color name="md_theme_surface">#1E293B</color> <!-- Elevated Slate -->
+    <color name="md_theme_onSurface">#E2E8F0</color>
+    <color name="md_theme_surfaceVariant">#334155</color> <!-- Lighter Slate for Chips/Decor -->
+
+    <!-- Financial Colors -->
+    <color name="colorExpense">#F87171</color> <!-- Soft Red -->
+    <color name="colorIncome">#4ADE80</color> <!-- Bright Green -->
+    <color name="colorTextSecondary">#94A3B8</color> <!-- Slate Grey -->
+
+    <!-- Card & Elevated Surfaces -->
+    <color name="colorCardBackground">#1E293B</color>
+    <color name="colorCardBorder">#334155</color>
+
+    <!-- Summary Card Gradient Colors -->
+    <color name="colorGradientStart">#0F172A</color>
+    <color name="colorGradientEnd">#1E293B</color>
+
+    <!-- Bottom Nav -->
+    <color name="colorBottomNav">#0F172A</color>
+    <color name="colorBottomNavIndicator">#0f282f</color>
 </resources>

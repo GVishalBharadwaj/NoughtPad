@@ -89,18 +89,12 @@ public class NotificationTransactionListener extends NotificationListenerService
             item.reminderTime = System.currentTimeMillis();
             item.isActive = false;
 
-            // Auto-Categorization Logic (Only for Debits usually)
+            // Auto-Categorization: "Tag once, tag forever"
             if (info.isDebit) {
-                String existingCat = database.reminderDao().getLastCategory(info.merchant);
-                // If we found a category that isn't the default "RECEIPT"
-                if (existingCat != null && !existingCat.isEmpty() && !"RECEIPT".equals(existingCat)) {
-                    item.category = "RECEIPT";
-                    item.tags = existingCat;
-                    // item.description += "\nCategory: " + existingCat; // No need to append to
-                    // description anymore
+                String existingTag = database.reminderDao().getLastTagForMerchant(info.merchant);
+                if (existingTag != null && !existingTag.isEmpty()) {
+                    item.tags = existingTag;
                 }
-            } else {
-                // item.description += "\nType: Income"; // No need, redundant
             }
 
             database.reminderDao().insert(item);
