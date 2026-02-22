@@ -45,7 +45,12 @@ public class TransactionParser {
         boolean isDebit = DEBIT_KEYWORD_PATTERN.matcher(message).find();
         boolean isCredit = CREDIT_KEYWORD_PATTERN.matcher(message).find();
 
-        if (!isDebit && !isCredit)
+        // Define pattern for upcoming bills, SIPs, statement generation
+        boolean isBill = Pattern.compile(
+                "(?i)(statement generated|payment due|min amount due|minimum amount due|bill generated|payment pending|sip of|auto pay|autopay)")
+                .matcher(message).find();
+
+        if (!isDebit && !isCredit && !isBill)
             return null; // Not a relevant transaction
 
         // 2. Extract Amount
@@ -61,8 +66,12 @@ public class TransactionParser {
             return null;
         }
 
-        info.isDebit = !isCredit;
+        info.isDebit = isDebit || isBill; // Bills are future debits
         info.timestamp = System.currentTimeMillis();
+
+        // If it's a bill, we flag it in the description or by a new boolean
+        // We'll use a special string in description to flag it for the Listener
+        boolean flagAsBill = isBill;
 
         // 3. Extract Merchant
         Matcher m1 = MERCHANT_PATTERN_1.matcher(message);
@@ -73,11 +82,15 @@ public class TransactionParser {
         } else if (m1.find()) {
             info.merchant = cleanMerchantName(m1.group(1));
         } else {
-            info.merchant = isCredit ? "Unknown Source" : "Unknown Merchant";
+            info.merchant = isCredit ? "Unknown Source" : (isBill ? "Upcoming Bill" : "Unknown Merchant");
         }
 
         // 4. Generate Clean Description
         info.description = cleanDescription(message, info.merchant);
+
+        if (flagAsBill) {
+            info.description = "[BILL] " + info.description;
+        }
 
         return info;
     }

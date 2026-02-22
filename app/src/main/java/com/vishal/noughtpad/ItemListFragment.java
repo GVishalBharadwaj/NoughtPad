@@ -90,7 +90,7 @@ public class ItemListFragment extends Fragment implements ReminderAdapter.OnItem
             List<ReminderItem> filteredList = new ArrayList<>();
             if (categoriesToShow.contains("ALL_REMINDERS")) {
                 for (ReminderItem item : allItems) {
-                    if ("BILL".equals(item.category) || "TICKET".equals(item.category)
+                    if ("TICKET".equals(item.category)
                             || "TASK".equals(item.category)) {
                         filteredList.add(item);
                     }

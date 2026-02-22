@@ -5,11 +5,15 @@
         android:icon="@drawable/ic_wallet"
         android:title="Expenses" />
     <item
+        android:id="@+id/nav_upcoming"
+        android:icon="@drawable/ic_clock"
+        android:title="Upcoming" />
+    <item
         android:id="@+id/nav_notes"
         android:icon="@drawable/ic_note"
         android:title="Notes" />
     <item
         android:id="@+id/nav_reminders"
-        android:icon="@drawable/ic_clock"
-        android:title="Reminders" />
+        android:icon="@drawable/ic_reminder"
+        android:title="Tasks" />
 </menu>

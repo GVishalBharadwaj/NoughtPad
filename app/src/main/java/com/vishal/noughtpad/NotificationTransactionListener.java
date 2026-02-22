@@ -40,11 +40,15 @@ public class NotificationTransactionListener extends NotificationListenerService
         CharSequence title = notification.extras.getCharSequence(Notification.EXTRA_TITLE);
         CharSequence text = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
         CharSequence bigText = notification.extras.getCharSequence(Notification.EXTRA_BIG_TEXT);
+        CharSequence subText = notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
+        CharSequence summaryText = notification.extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT);
 
         String fullText = (ticker != null ? ticker + " " : "") +
                 (title != null ? title + " " : "") +
                 (text != null ? text + " " : "") +
-                (bigText != null ? bigText + " " : "");
+                (bigText != null ? bigText + " " : "") +
+                (subText != null ? subText + " " : "") +
+                (summaryText != null ? summaryText + " " : "");
 
         // Simple dedup using hash of text
         String key = fullText.hashCode() + "";
@@ -67,31 +71,59 @@ public class NotificationTransactionListener extends NotificationListenerService
 
     private void saveTransaction(TransactionParser.TransactionInfo info) {
         executor.execute(() -> {
-            // Check for duplicates (same amount & merchant within last 2 hours)
-            // This handles delayed syncing between SMS, Email, and Bank Apps
+            // Check for duplicates robustly (same amount within last 2 hours + merchant
+            // string similarity)
             long twoHoursAgo = System.currentTimeMillis() - (2 * 60 * 60 * 1000);
-            int count = database.reminderDao().checkForDuplicate(info.amount, info.merchant, twoHoursAgo);
+            java.util.List<ReminderItem> recentItems = database.reminderDao().getRecentTransactionsByAmount(info.amount,
+                    twoHoursAgo);
 
-            if (count > 0) {
+            boolean isDuplicate = false;
+            String newMerchantLower = info.merchant.toLowerCase();
+            for (ReminderItem recent : recentItems) {
+                String existingMerchantLower = recent.title.toLowerCase();
+                // Check if one merchant name contains the other (e.g., "Amazon" vs "Amazon
+                // Pay")
+                if (existingMerchantLower.contains(newMerchantLower)
+                        || newMerchantLower.contains(existingMerchantLower)) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+
+            if (isDuplicate) {
                 Log.d(TAG, "Duplicate Transaction Ignored: " + info);
                 return;
             }
 
             ReminderItem item = new ReminderItem();
             item.title = info.merchant;
-            item.description = info.description; // Use the clean description from Parser
-            item.category = "RECEIPT";
 
-            // Handle Credit/Income
-            // We use 'note' type for expenses (legacy default) and 'income' for credits
-            item.type = info.isDebit ? "note" : "income";
+            boolean isBill = info.description != null && info.description.startsWith("[BILL]");
+            if (isBill) {
+                // Remove the flag
+                info.description = info.description.replace("[BILL] ", "").trim();
+            }
+
+            item.description = info.description;
+
+            if (isBill) {
+                item.category = "BILL";
+                item.type = "note";
+                item.isActive = true; // Make it an active reminder
+                // Set default reminder time slightly in the future if we don't know the exact
+                // date.
+                // Or just keep the active flag to show it in the Upcoming tab.
+            } else {
+                item.category = "RECEIPT";
+                item.type = info.isDebit ? "note" : "income";
+                item.isActive = false;
+            }
 
             item.amount = info.amount;
             item.reminderTime = System.currentTimeMillis();
-            item.isActive = false;
 
             // Auto-Categorization: "Tag once, tag forever"
-            if (info.isDebit) {
+            if (info.isDebit && !isBill) {
                 String existingTag = database.reminderDao().getLastTagForMerchant(info.merchant);
                 if (existingTag != null && !existingTag.isEmpty()) {
                     item.tags = existingTag;

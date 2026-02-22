@@ -37,7 +37,7 @@ public class ReminderAdapter extends ListAdapter<ReminderItem, RecyclerView.View
     @Override
     public int getItemViewType(int position) {
         ReminderItem item = getItem(position);
-        if ("RECEIPT".equals(item.category)) {
+        if ("RECEIPT".equals(item.category) || "BILL".equals(item.category)) {
             return TYPE_TRANSACTION;
         }
         return TYPE_REMINDER;

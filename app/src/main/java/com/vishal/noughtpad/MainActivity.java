@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private Fragment expensesFragment;
     private Fragment notesFragment;
     private Fragment remindersFragment;
+    private Fragment upcomingFragment;
     private Fragment activeFragment;
 
     @Override
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupFragments() {
         expensesFragment = ItemListFragment.newInstance(new ArrayList<>(Arrays.asList("RECEIPT")));
+        upcomingFragment = ItemListFragment.newInstance(new ArrayList<>(Arrays.asList("BILL")));
         notesFragment = ItemListFragment.newInstance(new ArrayList<>(Arrays.asList("NOTE")));
         remindersFragment = ItemListFragment.newInstance(new ArrayList<>(Arrays.asList("ALL_REMINDERS")));
 
@@ -78,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.fragment_container, remindersFragment, "reminders").hide(remindersFragment)
                 .add(R.id.fragment_container, notesFragment, "notes").hide(notesFragment)
+                .add(R.id.fragment_container, upcomingFragment, "upcoming").hide(upcomingFragment)
                 .add(R.id.fragment_container, expensesFragment, "expenses")
                 .commit();
         activeFragment = expensesFragment;
@@ -94,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
                 selected = notesFragment;
             } else if (itemId == R.id.nav_reminders) {
                 selected = remindersFragment;
+            } else if (itemId == R.id.nav_upcoming) {
+                selected = upcomingFragment;
             }
 
             if (selected != null && selected != activeFragment) {
